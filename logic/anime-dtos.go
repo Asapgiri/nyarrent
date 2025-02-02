@@ -23,6 +23,7 @@ type Episodes struct {
     Index       int
     Title       string
     Torrents    []EpisodeTorrent
+    Nyaa        []dbase.NyaaData
 }
 
 type Anime struct {

@@ -16,7 +16,12 @@ func Root(w http.ResponseWriter, r *http.Request) {
     if "/" == r.URL.Path {
         dto := logic.ListAnimes()
         dto.SearchText = r.URL.Query().Get("query")
-        log.Println(dto.Anime[0])
+
+        if "" != dto.SearchText {
+            http.Redirect(w, r, "/searchanime?query="+dto.SearchText, http.StatusSeeOther)
+            return
+        }
+
         fil, _ := read_artifact("index.html", w.Header())
         Render(w, fil, dto)
     } else {
@@ -96,10 +101,6 @@ func ListAnime(w http.ResponseWriter, r *http.Request) {
     route := r.PathValue("route")
     anime := logic.ListAnime(route)
 
-    log.Println(len(anime.Episodes[0].Torrents))
-    log.Println(anime.Episodes[0].Torrents[0].Torrent)
-    log.Println(anime.Episodes[0].Torrents[0].Info)
-
     fil, _ := read_artifact("listanime.html", w.Header())
     Render(w, fil, anime)
 }
@@ -113,6 +114,15 @@ func AddEpisode(w http.ResponseWriter, r *http.Request) {
     if nil == err {
         logic.AddEpisode(route, index, title, link, hash)
     }
+
+    http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
+}
+
+func RefreshNyaa(w http.ResponseWriter, r *http.Request) {
+    route := r.PathValue("route")
+    index := r.PathValue("index")
+
+    logic.RefreshNyaa(route, index)
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }

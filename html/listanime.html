@@ -48,6 +48,7 @@
                 </div>
             </li>
             <li class="list-group-item border-dark list-group-item-action p-0 bg-light collapse" id="collapse-{{.Index}}">
+                {{$id := .Index}}
                 {{if .Torrents}}
                 {{range .Torrents}}
                 <div class="m-2 overflow-auto small row">
@@ -68,10 +69,40 @@
                 {{end}}
                 {{else}}
                 <div class="m-2 overflow-auto small row">
-                    <div class="col-md-12">
-                        Nothing to show.
+                    <div class="col-md-8">
+                        Nothing Downloaded for episode {{.Index}}.
+                    </div>
+                    <div class="col-md-4">
+                        <a href="/refreshnyaa/{{$.Anime.Route}}/{{$id}}">Refresh nyaa list</a>
                     </div>
                 </div>
+                {{range .Nyaa}}
+                <div class="m-2 overflow-auto small row">
+                    <div class="col-md-2">
+                        {{.Category}}
+                    </div>
+                    <div class="col-md-6">
+                        <strong><a href="{{.Link}}">{{.Title}}</a></strong>
+                    </div>
+                    <div class="col-md-2">
+                        {{.Size}} /
+                        S:{{.Seeders}} /
+                        L:{{.Leechers}}
+                    </div>
+                    <div class="col-md-2">
+                        <form method="POST" action="/addepisode">
+                            <div class="input-group">
+                                <input type="text" name="route" value="{{$.Anime.Route}}" hidden>
+                                <input type="text" name="index" value="{{$id}}" hidden>
+                                <input type="text" name="link"  value="{{.Torrent}}" hidden>
+                                <div class="input-group-append" style="width: 100%">
+                                    <button class="btn btn-info" type="submit" style="width: 100%">Download</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {{end}}
                 {{end}}
                 <div class="m-2 overflow-auto small row">
                     <div class="col-md-12">

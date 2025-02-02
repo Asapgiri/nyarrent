@@ -118,12 +118,8 @@ func ListAnime(route string) Anime {
     dbAnime.Select(route)
 
     episodes := make([]Episodes, dbAnime.EpisodeCurrent)
-    for i, _ := range(episodes) {
-        episodes[i].Index = i + 1
-        episodes[i].Title = "null"
-    }
-
     dbEpisodes := dlSelectAll(dbAnime)
+
     for _, episode := range(dbEpisodes) {
         info := getTorrentInfo(episode.Hash)
         percent, _ := strconv.ParseFloat(strings.Trim(info.Transfer.PercentDone, "%"), 64)
@@ -137,6 +133,19 @@ func ListAnime(route string) Anime {
                 Url: GetTorrentFile(info.Name.Name, true),
             })
     }
+
+    for i, _ := range(episodes) {
+        idx := i + 1
+        episodes[i].Index = idx
+        if "" == episodes[i].Title {
+            episodes[i].Title = "null"
+        }
+        if 0 == len(episodes[i].Torrents) {
+            log.Printf("Getting nyaa for episode %s - ep%d\n", dbAnime.Title, idx)
+            episodes[i].Nyaa = GetNyaaList(dbAnime.Title, idx, 10, false)
+        }
+    }
+
 
     slices.Reverse(episodes)
 

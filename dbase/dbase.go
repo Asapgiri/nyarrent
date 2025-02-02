@@ -19,6 +19,7 @@ var db *mongo.Database
 
 var dbSAVED_ANIMES          *mongo.Collection
 var dbDOWNLOADED_EPISODES   *mongo.Collection
+var dbNYAA_CACHE            *mongo.Collection
 
 var log = logger.Logger {
     Color: logger.Colors.Purple,
@@ -69,6 +70,7 @@ func Connect() error {
 
     dbSAVED_ANIMES = db.Collection("saved-anime")
     dbDOWNLOADED_EPISODES = db.Collection("downloaded-episodes")
+    dbNYAA_CACHE = db.Collection("nyaa-cache")
 
     return nil
 }
@@ -150,5 +152,31 @@ func (danime *AnimeDownload) Update() error {
 func (danime *AnimeDownload) Delete() error {
     filter := bson.D{{"_id", danime.Id}}
     _, err := dbDOWNLOADED_EPISODES.DeleteOne(context.TODO(), filter)
+    return err
+}
+
+// =====================================================================================================================
+// Nyaa CRUD
+
+func (nyaached *NyaaCached) Select(title string, episode int) error {
+    filter := bson.D{{"episode", episode}, {"title", title}}
+    err := dbNYAA_CACHE.FindOne(context.TODO(), filter).Decode(nyaached)
+    return err
+}
+
+func (nyaached *NyaaCached) Add() error {
+    _, err := dbNYAA_CACHE.InsertOne(context.TODO(), nyaached)
+    return err
+}
+
+func (nyaached *NyaaCached) Update() error {
+    _, err := dbNYAA_CACHE.UpdateByID(context.TODO(), nyaached.Id, nyaached)
+    return err
+
+}
+
+func (nyaached *NyaaCached) Delete() error {
+    filter := bson.D{{"_id", nyaached.Id}}
+    _, err := dbNYAA_CACHE.DeleteOne(context.TODO(), filter)
     return err
 }

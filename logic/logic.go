@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"nyarrent/dbase"
 	"nyarrent/logger"
 	"os"
 	"os/exec"
@@ -12,6 +13,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const downloadFolder = "/mnt/d/Download"
@@ -158,26 +161,45 @@ func getTorrentInfo(idHash string) TorrentInfo {
     info.Transfer.CorruptDL =       re.ReplaceAllString(lines[20], "$2")
     info.Transfer.Peers =           re.ReplaceAllString(lines[21], "$2")
 
-    info.Hystory.DateAdded =        strings.Join(strings.Fields(lines[24])[2:], " ")
-    info.Hystory.DateFinished =     strings.Join(strings.Fields(lines[25])[2:], " ")
-    info.Hystory.DateStarted =      strings.Join(strings.Fields(lines[26])[2:], " ")
-    info.Hystory.LatestActivity =   strings.Join(strings.Fields(lines[27])[2:], " ")
-    info.Hystory.DownloadingTime =  strings.Join(strings.Fields(lines[28])[2:], " ")
-    info.Hystory.SeedingTime =      strings.Join(strings.Fields(lines[29])[2:], " ")
+    if "Idle" == info.Transfer.State || "Downloading" == info.Transfer.State {
+        next := 24
+        if "Downloading" == info.Transfer.State {
+            next = 25
+        }
 
-    info.Origins.DateCreated            = re.ReplaceAllString(lines[32], "$2")
-    info.Origins.PublicTorrent          = re.ReplaceAllString(lines[33], "$2")
-    info.Origins.Comment                = re.ReplaceAllString(lines[34], "$2")
-    info.Origins.Creator                = re.ReplaceAllString(lines[35], "$2")
-    info.Origins.PieceCount             = re.ReplaceAllString(lines[36], "$2")
-    info.Origins.PieceSize              = re.ReplaceAllString(lines[37], "$2")
+        info.Hystory.DateAdded =        strings.Join(strings.Fields(lines[next + 0])[2:], " ")
 
-    info.LimitsB.DownloadLimit          = re.ReplaceAllString(lines[40], "$2")
-    info.LimitsB.UploadLimit            = re.ReplaceAllString(lines[41], "$2")
-    info.LimitsB.RatioLimit             = re.ReplaceAllString(lines[42], "$2")
-    info.LimitsB.HonorsSessionLimits    = re.ReplaceAllString(lines[43], "$2")
-    info.LimitsB.PeerLimit              = re.ReplaceAllString(lines[44], "$2")
-    info.LimitsB.BandwidthPriority      = re.ReplaceAllString(lines[45], "$2")
+        if "" == lines[next + 3] {
+            next = next - 1
+        } else {
+            info.Hystory.DateFinished =     strings.Join(strings.Fields(lines[next + 1])[2:], " ")
+        }
+
+        info.Hystory.DateStarted =      strings.Join(strings.Fields(lines[next + 2])[2:], " ")
+        info.Hystory.LatestActivity =   strings.Join(strings.Fields(lines[next + 3])[2:], " ")
+
+        if "" == lines[next + 4] {
+            next = next - 2
+        } else {
+            info.Hystory.DownloadingTime =  strings.Join(strings.Fields(lines[next + 4])[2:], " ")
+            info.Hystory.SeedingTime =      strings.Join(strings.Fields(lines[next + 5])[2:], " ")
+        }
+
+
+        info.Origins.DateCreated            = re.ReplaceAllString(lines[next + 8], "$2")
+        info.Origins.PublicTorrent          = re.ReplaceAllString(lines[next + 9], "$2")
+        info.Origins.Comment                = re.ReplaceAllString(lines[next + 10], "$2")
+        info.Origins.Creator                = re.ReplaceAllString(lines[next + 11], "$2")
+        info.Origins.PieceCount             = re.ReplaceAllString(lines[next + 12], "$2")
+        info.Origins.PieceSize              = re.ReplaceAllString(lines[next + 13], "$2")
+
+        info.LimitsB.DownloadLimit          = re.ReplaceAllString(lines[next + 16], "$2")
+        info.LimitsB.UploadLimit            = re.ReplaceAllString(lines[next + 17], "$2")
+        info.LimitsB.RatioLimit             = re.ReplaceAllString(lines[next + 18], "$2")
+        info.LimitsB.HonorsSessionLimits    = re.ReplaceAllString(lines[next + 19], "$2")
+        info.LimitsB.PeerLimit              = re.ReplaceAllString(lines[next + 20], "$2")
+        info.LimitsB.BandwidthPriority      = re.ReplaceAllString(lines[next + 21], "$2")
+    }
 
     return info
 }
@@ -306,4 +328,68 @@ func FindNewAnimes(query string, page string) AnimeSearchPage {
 
 func ListAnimes() DtoAnime {
     return listAllAnime()
+}
+
+// Nyaa.si related
+
+func GetNyaaList(title string, episode int, resultCount int, forceRefresh bool) []dbase.NyaaData {
+    q := strings.Join(strings.Split(title, " ")[:2], "+") + "+" + strconv.FormatInt(int64(episode), 10)
+    nyaaJson := dbase.NyaaJson{}
+
+    nyaacache := dbase.NyaaCached{}
+    nyaacache.Select(title, episode)
+    if "" == nyaacache.Title || forceRefresh {
+        log.Println("Getting episode for: " + q)
+        resp, err := http.Get("https://nyaaapi.onrender.com/nyaa?q="+q)
+        if nil != err {
+            log.Println(err.Error())
+            return []dbase.NyaaData{}
+        }
+        defer resp.Body.Close()
+
+        aniListJsonBarr, err := io.ReadAll(resp.Body)
+        if nil != err {
+            log.Println(err.Error())
+            return []dbase.NyaaData{}
+        }
+
+        err = json.Unmarshal(aniListJsonBarr, &nyaaJson)
+        if nil != err {
+            log.Println(err.Error())
+            return []dbase.NyaaData{}
+        }
+
+        nyaacache.Episode = episode
+        nyaacache.Title = title
+        nyaacache.Nyaa = nyaaJson
+        if nyaacache.Id.IsZero() {
+            nyaacache.Id = primitive.NewObjectID()
+            nyaacache.Add()
+        } else {
+            nyaacache.Update()
+        }
+    } else {
+        log.Println("Episodes exists for: " + q)
+        nyaaJson = nyaacache.Nyaa
+    }
+
+
+    if len(nyaaJson.Data) >= resultCount {
+        return nyaaJson.Data[:resultCount]
+    } else {
+        return nyaaJson.Data
+    }
+
+}
+
+func RefreshNyaa(route string, episode string) {
+    dbAnime := dbase.Anime{}
+    dbAnime.Select(route)
+
+    epiInt, err := strconv.ParseInt(episode, 10, 64)
+    if nil != err {
+        return
+    }
+
+    GetNyaaList(dbAnime.Title, int(epiInt), 10, true)
 }
