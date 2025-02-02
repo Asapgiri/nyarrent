@@ -2,8 +2,11 @@ package main
 
 import (
 	"net/http"
+	"nyarrent/dbase"
 	"nyarrent/logger"
 	"nyarrent/pages"
+	"os"
+	"strings"
 )
 
 var msg = logger.Logger {
@@ -22,8 +25,16 @@ func (h Hello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+    var port = "3000";
+
+    dbase.Connect()
     setup_routes()
 
-    err := http.ListenAndServe(":80", nil)
+    args := os.Args[1:]
+    if 0 < len(args) {
+        port = args[0];
+    }
+
+    err := http.ListenAndServe(strings.Join([]string{":", port}, ""), nil)
     msg.Println(err)
 }

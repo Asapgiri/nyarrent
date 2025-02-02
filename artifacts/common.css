@@ -1,0 +1,146 @@
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+    position: relative;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.page-wrapper {
+    overflow-x: hidden;
+    position: relative;
+}
+
+.color-orange {
+    color: orange;
+    background-color: transparent;
+}
+
+td {
+    vertical-align: top;
+    text-align: left;
+}
+
+.cs-footer {
+    margin-top: 100px;
+}
+
+.bg-black {
+    background-color: black;
+}
+
+.subscribe {
+    max-width: 300px;
+}
+
+.underline {
+    text-decoration: underline;
+}
+
+.underline:hover {
+    text-decoration: underline;
+}
+
+.footer-row {
+    min-height: 160px;
+}
+
+.footer-row a {
+    background: transparent !important;
+    border: 0px !important;
+    color: black;
+}
+
+.footer-row a:hover {
+    color: #85A366;
+    background-color: white !important;
+}
+
+/* own css... */
+.bg-green {
+    background-color: #85A366;
+}
+
+.news-text {
+    font-family: 'Shrikhand', cursive;
+    font-size: 26px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    letter-spacing: 1px;
+}
+
+.bg-darkwhite {
+    background-color: #e6e6e6;
+}
+
+.img-hover {
+    width: 100% !important;
+    max-height: 400px;
+    position: relative;
+    object-fit: cover;
+    object-position: 0 0;
+}
+
+.center-400 {
+    max-width: 400px;
+    margin: auto;
+}
+
+.center-600 {
+    max-width: 600px;
+    margin: auto;
+}
+
+.img-hover:hover {
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.img {
+    width: 100%;
+}
+
+.img:hover {
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+main {
+    min-height: 700px;
+}
+
+.min-width-2 {
+    min-width: 70px;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+label.required:after {
+    content: " *";
+    color: red;
+}
+
+.red {
+    color: red;
+}
+
+.table-width-5 {
+    min-width: 120px;
+}
+
+.table-message td {
+    padding: 15px 0px;
+}
+
+/* Numbered lists like 1, 1.1, 2.2.1... */
+ol li {display:block; margin-bottom: 1px; margin-top: 2px} /* hide original list counter */
+ol ol {display:block; margin-bottom: 5px;} /* hide original list counter */
+ol > li:first-child {counter-reset: item;} /* reset counter */
+ol > li {counter-increment: item; position: relative;} /* increment counter */
+ol > li:before {content:counters(item, ".") ". "; position: absolute; margin-right: 100%; right: 10px;} /* print counter */

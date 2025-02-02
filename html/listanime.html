@@ -1,0 +1,96 @@
+<div class="col-lg-12 px-2">
+    <div class="text-muted pt-3">
+
+        <div class="row">
+            <div class="col-md-3">
+                <img class="card-img-top" src="https://img.animeschedule.net/production/assets/public/img/{{.Anime.Banner}}" alt="Card image cap">
+            </div>
+
+            <div class="col-md-9">
+                <h1>
+                    <strong><a href="/listanime/{{.Anime.Route}}">{{.Anime.Title}}</a></strong>
+                </h1>
+
+                <p>{{.Anime.FullInfo.Description}}</p>
+            </div>
+        </div>
+
+        <ul class="list-group list-group-flush" id="table">
+
+            <li class="list-group-item list-group-item-action p-2 disabled">
+                <strong>
+                    <div class="row">
+                        <div class="col-md-2">Episode</div>
+                        <div class="col-md-8">Title</div>
+                        <div class="col-md-2">Availability</div>
+                    </div>
+                </strong>
+            </li>
+
+            {{range .Episodes}}
+            <li class="list-group-item list-group-item-action p-2 small searchable cursor-pointer" id="colli-{{.Index}}"
+                data-bs-toggle="collapse" data-bs-target="#collapse-{{.Index}}" aria-expanded="false"
+                aria-controls="collapse-{{.Index}}">
+                <div class="row">
+                    <div class="col-md-2">
+                        {{.Index}}
+                    </div>
+                    <div class="col-md-8">
+                        {{.Title}}
+                    </div>
+                    <div class="col-md-2">
+                        {{if .Torrents}}
+                        <strong>Available</strong>
+                        {{else}}
+                        Not Available
+                        {{end}}
+                    </div>
+                </div>
+            </li>
+            <li class="list-group-item border-dark list-group-item-action p-0 bg-light collapse" id="collapse-{{.Index}}">
+                {{if .Torrents}}
+                {{range .Torrents}}
+                <div class="m-2 overflow-auto small row">
+                    <div class="col-md-2">
+                        <div class="progress" style="height: 100%">
+                            <div class="progress-bar bg-{{.Progress.Color}}" role="progressbar"
+                                style="width: {{.Progress.Percentage}}%;" aria-valuenow="{{.Progress.Percentage}}"
+                                aria-valuemin="0" aria-valuemax="100">{{.Progress.Percentage}}%</div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <strong><a href="{{.Url}}">{{.Info.Name.Name}}</a></strong>
+                    </div>
+                    <div class="col-md-2">
+                        {{.Info.Transfer.TotalSize}}
+                    </div>
+                </div>
+                {{end}}
+                {{else}}
+                <div class="m-2 overflow-auto small row">
+                    <div class="col-md-12">
+                        Nothing to show.
+                    </div>
+                </div>
+                {{end}}
+                <div class="m-2 overflow-auto small row">
+                    <div class="col-md-12">
+                        <form method="POST" action="/addepisode">
+                            <div class="input-group">
+                                <input type="text" name="route" value="{{$.Anime.Route}}" hidden>
+                                <input type="text" name="index" value="{{.Index}}" hidden>
+                                <input type="text" name="link" class="form-control" placeholder="New Episode Link ..." aria-label="Link" aria-describedby="basic-addon2">
+                                <div class="input-group-append">
+                                    <button class="btn btn-info" type="submit">Add</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </li>
+            {{end}}
+
+        </ul>
+
+    </div>
+</div>

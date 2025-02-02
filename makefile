@@ -4,7 +4,7 @@ build:
 	go build -o ${name}
 
 run:
-	echo "\e[32mStarting Server!\e[0m"
+	echo -e "\e[32mStarting Server!\e[0m"
 	./${name}
 
 reflex:
