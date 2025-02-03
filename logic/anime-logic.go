@@ -7,7 +7,6 @@ import (
 	"nyarrent/dbase"
 	"slices"
 	"strconv"
-	"strings"
 
 	"github.com/er-azh/go-animeschedule"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -33,15 +32,20 @@ func listAllAnime() DtoAnime {
         }
         for _, episode := range(episodes) {
             info := getTorrentInfo(episode.Hash)
-            percent, _ := strconv.ParseFloat(strings.Trim(info.Transfer.PercentDone, "%"), 64)
+            var percent float64
+            if 0 == info.SizeWhenDone {
+                percent = 0.0
+            } else {
+                percent = float64(info.HaveValid) / float64(info.SizeWhenDone)
+            }
 
             lAnime[i].Episodes[episode.Episode - 1].Title = episode.Title
             lAnime[i].Episodes[episode.Episode - 1].Torrents =
                 append(lAnime[i].Episodes[episode.Episode - 1].Torrents, EpisodeTorrent{
                     Torrent: episode,
                     Info: info,
-                    Progress: GenerateProgress(percent / 100),
-                    Url: GetTorrentFile(info.Name.Name, true),
+                    Progress: GenerateProgress(percent),
+                    Url: GetTorrentFile(info.Name, true),
                 })
         }
     }
@@ -122,15 +126,15 @@ func ListAnime(route string) Anime {
 
     for _, episode := range(dbEpisodes) {
         info := getTorrentInfo(episode.Hash)
-        percent, _ := strconv.ParseFloat(strings.Trim(info.Transfer.PercentDone, "%"), 64)
+        percent := float64(info.HaveValid) / float64(info.SizeWhenDone)
 
         episodes[episode.Episode - 1].Title = episode.Title
         episodes[episode.Episode - 1].Torrents =
             append(episodes[episode.Episode - 1].Torrents, EpisodeTorrent{
                 Torrent: episode,
                 Info: getTorrentInfo(episode.Hash),
-                Progress: GenerateProgress(percent / 100),
-                Url: GetTorrentFile(info.Name.Name, true),
+                Progress: GenerateProgress(percent),
+                Url: GetTorrentFile(info.Name, true),
             })
     }
 

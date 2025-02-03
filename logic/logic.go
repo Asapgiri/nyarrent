@@ -9,7 +9,6 @@ import (
 	"nyarrent/logger"
 	"os"
 	"os/exec"
-	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -38,10 +37,11 @@ func GenerateProgress(percentage float64) Progress {
 
     if percentage >= 1.0 {
         index = len(color_list) - 1
+    } else if percentage < 0 {
+        index = 0
     } else {
         index = int(float64(len(color_list)) * percentage)
     }
-
 
     return Progress{
         Color: color_list[index],
@@ -78,6 +78,28 @@ func zipIt(path string) string {
     return zipName
 }
 
+//func convertMp4(path string) string {
+//    mp4Name := strings.Join([]string{path, "mp4"}, ".")
+//    _, err := getFileInfo(mp4Name)
+//    if nil != err {
+//        if slices.Contains(zipMap, mp4Name) {
+//            return "In progress..."
+//        }
+//
+//        zipMap = append(zipMap, mp4Name)
+//        out, err := exec.Command("ffmpeg", "-i", path, "-c:v", "copy", "-map", "0", "-c:s", "mov_text", mp4Name).Output()
+//
+//        log.Println(err)
+//        log.Println(string(out))
+//        log.Println("finished!")
+//
+//        index := slices.Index(zipMap, mp4Name)
+//        zipMap = removeElement(zipMap, index)
+//    }
+//
+//    return mp4Name
+//}
+
 func getFileInfo(path string) (fs.FileInfo, error) {
     file, err := os.Open(path)
     if nil != err {
@@ -107,6 +129,9 @@ func GetTorrentFile(title string, publicPath bool) string {
     var file string
     if fileInfo.IsDir() {
         file = zipIt(path)
+    //} else if ".mp4" != filepath.Ext(path) {
+    //    log.Println(filepath.Ext(path))
+    //    file = convertMp4(path)
     } else {
         file = path
     }
@@ -118,8 +143,13 @@ func GetTorrentFile(title string, publicPath bool) string {
     return file
 }
 
-func getTorrentInfoString(idHash string) string {
-    cmd := exec.Command("transmission-remote", "-t", idHash, "-i")
+func getTorrentInfoString(idHash string, isJson bool) string {
+    var cmd *exec.Cmd
+    if isJson {
+        cmd = exec.Command("transmission-remote", "-t", idHash, "-j", "-i")
+    } else {
+        cmd = exec.Command("transmission-remote", "-t", idHash, "-i")
+    }
 
     stdout, err := cmd.Output()
     if nil != err {
@@ -130,78 +160,20 @@ func getTorrentInfoString(idHash string) string {
 }
 
 func getTorrentInfo(idHash string) TorrentInfo {
-    infoStr := getTorrentInfoString(idHash)
+    infoStr := getTorrentInfoString(idHash, true)
 
-    lines := strings.Split(infoStr, "\n")
-    if len(lines) < 3 {
+    infoJson := TransmissionResults{}
+    err := json.Unmarshal([]byte(infoStr), &infoJson)
+    if nil != err {
+        log.Println(err.Error())
         return TorrentInfo{}
     }
 
-    re := regexp.MustCompile("^.*: ")
-    info := TorrentInfo{}
-
-    info.Name.Id =                  re.ReplaceAllString(lines[1], "$2")
-    info.Name.Name =                re.ReplaceAllString(lines[2], "$2")
-    info.Name.Hash =                re.ReplaceAllString(lines[3], "$2")
-    info.Name.Magnet =              re.ReplaceAllString(lines[4], "$2")
-    info.Name.Labesl =              re.ReplaceAllString(lines[5], "$2")
-
-    info.Transfer.State =           re.ReplaceAllString(lines[8], "$2")
-    info.Transfer.Location =        re.ReplaceAllString(lines[9], "$2")
-    info.Transfer.PercentDone =     re.ReplaceAllString(lines[10], "$2")
-    info.Transfer.ETA =             re.ReplaceAllString(lines[11], "$2")
-    info.Transfer.DownloadSpeed =   re.ReplaceAllString(lines[12], "$2")
-    info.Transfer.UploadSpeed =     re.ReplaceAllString(lines[13], "$2")
-    info.Transfer.Have =            re.ReplaceAllString(lines[14], "$2")
-    info.Transfer.Availability =    re.ReplaceAllString(lines[15], "$2")
-    info.Transfer.TotalSize =       re.ReplaceAllString(lines[16], "$2")
-    info.Transfer.Downloaded =      re.ReplaceAllString(lines[17], "$2")
-    info.Transfer.Uploaded =        re.ReplaceAllString(lines[18], "$2")
-    info.Transfer.Ratio =           re.ReplaceAllString(lines[19], "$2")
-    info.Transfer.CorruptDL =       re.ReplaceAllString(lines[20], "$2")
-    info.Transfer.Peers =           re.ReplaceAllString(lines[21], "$2")
-
-    if "Idle" == info.Transfer.State || "Downloading" == info.Transfer.State {
-        next := 24
-        if "Downloading" == info.Transfer.State {
-            next = 25
-        }
-
-        info.Hystory.DateAdded =        strings.Join(strings.Fields(lines[next + 0])[2:], " ")
-
-        if "" == lines[next + 3] {
-            next = next - 1
-        } else {
-            info.Hystory.DateFinished =     strings.Join(strings.Fields(lines[next + 1])[2:], " ")
-        }
-
-        info.Hystory.DateStarted =      strings.Join(strings.Fields(lines[next + 2])[2:], " ")
-        info.Hystory.LatestActivity =   strings.Join(strings.Fields(lines[next + 3])[2:], " ")
-
-        if "" == lines[next + 4] {
-            next = next - 2
-        } else {
-            info.Hystory.DownloadingTime =  strings.Join(strings.Fields(lines[next + 4])[2:], " ")
-            info.Hystory.SeedingTime =      strings.Join(strings.Fields(lines[next + 5])[2:], " ")
-        }
-
-
-        info.Origins.DateCreated            = re.ReplaceAllString(lines[next + 8], "$2")
-        info.Origins.PublicTorrent          = re.ReplaceAllString(lines[next + 9], "$2")
-        info.Origins.Comment                = re.ReplaceAllString(lines[next + 10], "$2")
-        info.Origins.Creator                = re.ReplaceAllString(lines[next + 11], "$2")
-        info.Origins.PieceCount             = re.ReplaceAllString(lines[next + 12], "$2")
-        info.Origins.PieceSize              = re.ReplaceAllString(lines[next + 13], "$2")
-
-        info.LimitsB.DownloadLimit          = re.ReplaceAllString(lines[next + 16], "$2")
-        info.LimitsB.UploadLimit            = re.ReplaceAllString(lines[next + 17], "$2")
-        info.LimitsB.RatioLimit             = re.ReplaceAllString(lines[next + 18], "$2")
-        info.LimitsB.HonorsSessionLimits    = re.ReplaceAllString(lines[next + 19], "$2")
-        info.LimitsB.PeerLimit              = re.ReplaceAllString(lines[next + 20], "$2")
-        info.LimitsB.BandwidthPriority      = re.ReplaceAllString(lines[next + 21], "$2")
+    if len(infoJson.Arguments.Torrents) > 0 {
+        return infoJson.Arguments.Torrents[0]
+    } else {
+        return TorrentInfo{}
     }
-
-    return info
 }
 
 func GetTorrents() []Torrent {
@@ -233,11 +205,13 @@ func GetTorrents() []Torrent {
             }
             newTorrent.Url = GetTorrentFile(newTorrent.Title, true)
 
-            newTorrent.Info = getTorrentInfoString(newTorrent.Id)
+            newTorrent.Info = getTorrentInfoString(newTorrent.Id, false)
 
             torrents = append(torrents, newTorrent)
         }
     }
+
+    slices.Reverse(torrents)
 
     return torrents
 }
@@ -333,7 +307,13 @@ func ListAnimes() DtoAnime {
 // Nyaa.si related
 
 func GetNyaaList(title string, episode int, resultCount int, forceRefresh bool) []dbase.NyaaData {
-    q := strings.Join(strings.Split(title, " ")[:2], "+") + "+" + strconv.FormatInt(int64(episode), 10)
+    var q string
+    if len(strings.Split(title, " ")) > 2 {
+        q = strings.Join(strings.Split(title, " ")[:2], "+")
+    } else {
+        q = strings.Replace(title, " ", "+", 0)
+    }
+    q = q + "+" + strconv.FormatInt(int64(episode), 10)
     nyaaJson := dbase.NyaaJson{}
 
     nyaacache := dbase.NyaaCached{}

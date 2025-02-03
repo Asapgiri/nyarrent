@@ -6,7 +6,7 @@
 
 ## Prerequireties
 ```sh
-$ sudo apt install transmission-daemon zip
+$ sudo apt install transmission-daemon zip ffmpeg
 ```
 
 ## Mandatory Environmentals
