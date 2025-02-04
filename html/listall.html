@@ -37,9 +37,9 @@
                     <div class="row">
                         <div class="col-md-2">Id - Progress</div>
                         <div class="col-md-1">Size</div>
-                        <div class="col-md-7">Title</div>
-                        <div class="col-md-1">Eta</div>
-                        <div class="col-md-1">Status</div>
+                        <div class="col-md-6">Title</div>
+                        <div class="col-md-2">Added</div>
+                        <div class="col-md-1">Eta - Status</div>
                     </div>
                 </strong>
             </li>
@@ -61,14 +61,15 @@
                     </div>
                     <div class="col-md-1">{{.Size}}</div>
 
-                    <div class="col-md-7">
+                    <div class="col-md-6">
                         <strong><a href="{{.Url}}">{{.Title}}</a></strong>
                     </div>
 
-                    <div class="col-md-1">
-                        {{.Eta}}
+                    <div class="col-md-2">
+                        {{.Dates.Added}}
                     </div>
                     <div class="col-md-1">
+                        {{.Eta}}
                         {{.Status}}
                     </div>
                 </div>

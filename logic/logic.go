@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"io/fs"
+	"math"
 	"net/http"
 	"nyarrent/dbase"
 	"nyarrent/logger"
@@ -12,6 +13,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -176,6 +178,41 @@ func getTorrentInfo(idHash string) TorrentInfo {
     }
 }
 
+var formatStr = "2006-01-02 15:04:05"
+func timeAgo(date int64) string {
+    t := time.Unix(date, 0)
+    diff := time.Now().Sub(t)
+
+    pastForm := ""
+
+    if diff.Hours() < 3 {
+        hours := int64(math.Floor(diff.Hours()))
+        minutes := int64(math.Floor(diff.Minutes())) % 60
+        seconds := int64(math.Floor(diff.Seconds())) % 60
+        if hours > 0 {
+            pastForm += " (" + strconv.FormatInt(hours, 10) + "h "
+            pastForm +=        strconv.FormatInt(minutes, 10) + "m ago)"
+        } else if minutes > 0 {
+            pastForm += " (" + strconv.FormatInt(minutes, 10) + "m ago)"
+        } else {
+            pastForm += " (" + strconv.FormatInt(seconds, 10) + "s ago)"
+        }
+    }
+
+
+    return t.Format(formatStr) + pastForm
+}
+
+func getTorrentDatesReadable(info TorrentInfo) TorrentDatesReadable {
+    return TorrentDatesReadable{
+        Activity: timeAgo(int64(info.ActivityDate)),
+        Added: timeAgo(int64(info.AddedDate)),
+        Created: timeAgo(int64(info.DateCreated)),
+        Done: timeAgo(int64(info.DoneDate)),
+        Start: timeAgo(int64(info.StartDate)),
+    }
+}
+
 func GetTorrents() []Torrent {
     cmd := exec.Command("transmission-remote", "--list")
 
@@ -206,6 +243,8 @@ func GetTorrents() []Torrent {
             newTorrent.Url = GetTorrentFile(newTorrent.Title, true)
 
             newTorrent.Info = getTorrentInfoString(newTorrent.Id, false)
+            newTorrent.FullInfo = getTorrentInfo(newTorrent.Id)
+            newTorrent.Dates = getTorrentDatesReadable(newTorrent.FullInfo)
 
             torrents = append(torrents, newTorrent)
         }

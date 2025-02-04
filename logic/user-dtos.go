@@ -5,6 +5,14 @@ type Progress struct {
     Percentage  int
 }
 
+type TorrentDatesReadable struct {
+    Activity    string
+    Added       string
+    Created     string
+    Done        string
+    Start       string
+}
+
 type Torrent struct {
     Id          string
     Title       string
@@ -14,6 +22,8 @@ type Torrent struct {
     Status      string
     Progress    Progress
     Info        string
+    FullInfo    TorrentInfo
+    Dates       TorrentDatesReadable
 }
 
 type DiskUsage struct {

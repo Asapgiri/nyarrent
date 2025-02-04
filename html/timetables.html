@@ -83,7 +83,9 @@
             <div class="card bg-transparent border-0">
             {{else}}
             <div class="card" style="{{if .Aired}}background: #ffffc5;{{else if and .Added (not $.Filter.OnlyOnList)}}background: #d3d3d3;{{end}}">
-                <img src="https://img.animeschedule.net/production/assets/public/img/{{.Anime.ImageVersionRoute}}" class="card-img-top" alt="{{.Anime.Title}}">
+                <a href="{{if .Added}}/listanime/{{else}}https://animeschedule.net/anime/{{end}}{{.Anime.Route}}" {{if not .Added}}target="_blank"{{end}}>
+                    <img src="https://img.animeschedule.net/production/assets/public/img/{{.Anime.ImageVersionRoute}}" class="card-img-top" alt="{{.Anime.Title}}">
+                </a>
                 <div class="card-body">
                     <h5 class="card-title">
                         {{.Anime.Episodes}}/<strong>{{.Anime.EpisodeNumber}}</strong>
