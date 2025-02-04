@@ -16,6 +16,7 @@ func setup_routes() {
 
     http.HandleFunc("GET /listall",             pages.ListAllTorrents)
     http.HandleFunc("GET /searchanime",         pages.SearchNewAnimes)
+    http.HandleFunc("GET /timetables",          pages.ListTimetables)
     http.HandleFunc("GET /addanime/{route}",    pages.AddAnime)
 
     http.HandleFunc("GET /listanime/{route}",   pages.ListAnime)

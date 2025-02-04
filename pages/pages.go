@@ -30,6 +30,16 @@ func Root(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func ListTimetables(w http.ResponseWriter, r *http.Request) {
+    filter := logic.AnimeTimetableFilter{
+        OnlyOnList: r.URL.Query().Get("onlyonlist") == "on",
+        SendBack: r.URL.Query().Has("sendback"),
+    }
+
+    fil, _ := read_artifact("timetables.html", w.Header())
+    Render(w, fil, logic.ListTimetables(filter))
+}
+
 func SearchNewAnimes(w http.ResponseWriter, r *http.Request) {
     query := r.URL.Query().Get("query")
     page := r.URL.Query().Get("page")
@@ -93,10 +103,16 @@ func DeleteTorrent(w http.ResponseWriter, r *http.Request) {
 
 func AddAnime(w http.ResponseWriter, r *http.Request) {
     route := r.PathValue("route")
+    sendback := r.URL.Query().Has("sendback")
 
     logic.AddorUpdateAnime(route)
 
-    http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
+    if sendback {
+        log.Println(r.Header.Get("Referer"))
+        http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
+    } else {
+        http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
+    }
 }
 
 func ListAnime(w http.ResponseWriter, r *http.Request) {

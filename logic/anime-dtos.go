@@ -14,6 +14,25 @@ type AnimeSearchPage struct {
     Added       []bool
 }
 
+type TimetableShow struct {
+    Anime   animeschedule.TimetableShow
+    Added   bool
+    Filled  bool
+    Aired   bool
+}
+
+type AnimeWeek [7]TimetableShow
+
+type AnimeTimetableFilter struct {
+    OnlyOnList  bool
+    SendBack    bool
+}
+
+type AnimeTimetablePage struct {
+    AnimeWeek   []AnimeWeek
+    Filter      AnimeTimetableFilter
+}
+
 type EpisodeTorrent struct {
     Torrent     dbase.AnimeDownload
     Info        TorrentInfo

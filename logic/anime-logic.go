@@ -82,33 +82,115 @@ func aSHttpGet(query string) (*http.Response, error) {
     return client.Do(req)
 }
 
+func sJsonHttpUnmarshall(object interface{}, query string) error {
+    resp, err := aSHttpGet(query)
+    if nil != err {
+        log.Println(err.Error())
+        return err
+    }
+    defer resp.Body.Close()
+
+    objectJsonBarr, err := io.ReadAll(resp.Body)
+    if nil != err {
+        log.Println(err.Error())
+        return err
+    }
+
+    err = json.Unmarshal(objectJsonBarr, &object)
+    if nil != err {
+        log.Println(resp)
+        log.Println(err.Error())
+        return err
+    }
+
+    return nil
+}
+
+func getLongestDayShowCount(timetable animeschedule.Timetable) ([7]int, int) {
+    weekdays := [7]int{}
+    dayCount := 0
+    current := timetable[0].EpisodeDate
+
+    for _, anime := range(timetable) {
+        if current.Day() != anime.EpisodeDate.Day() {
+            for current.Day() != anime.EpisodeDate.Day() {
+                current = current.Add(time.Hour * 24)
+                dayCount++
+            }
+        }
+
+        weekdays[dayCount]++
+    }
+
+    highestCount := weekdays[0]
+    for _, count := range(weekdays) {
+        if count > highestCount {
+            highestCount = count
+        }
+    }
+
+    return weekdays, highestCount
+}
+
+func ListTimetables(filter AnimeTimetableFilter) AnimeTimetablePage {
+    timetable := animeschedule.Timetable{}
+
+    err := sJsonHttpUnmarshall(&timetable, "/timetables/sub")
+    if nil != err {
+        return AnimeTimetablePage{}
+    }
+
+    dbanime := dbase.Anime{}
+    list, _ := dbanime.List()
+
+    if (filter.OnlyOnList) {
+        filteredTimetable := animeschedule.Timetable{}
+        for _, anime := range(timetable) {
+            for _, l := range(list) {
+                if anime.Route == l.Route {
+                    filteredTimetable = append(filteredTimetable, anime)
+                }
+            }
+        }
+        timetable = filteredTimetable
+    }
+
+    weekdays, maxShowPerDay := getLongestDayShowCount(timetable)
+    attPage := AnimeTimetablePage{
+        AnimeWeek: make([]AnimeWeek, maxShowPerDay),
+        Filter: filter,
+    }
+
+    ttCounter := 0
+    dtNow := time.Now()
+    for day, days := range(weekdays) {
+        for i := 0; i < days; i++ {
+            attPage.AnimeWeek[i][day].Anime = timetable[ttCounter + i]
+            attPage.AnimeWeek[i][day].Filled = true
+            attPage.AnimeWeek[i][day].Aired = timetable[ttCounter + i].EpisodeDate.Compare(dtNow) <= 0
+            for _, l := range(list) {
+                if attPage.AnimeWeek[i][day].Anime.Route == l.Route {
+                    attPage.AnimeWeek[i][day].Added = true
+                }
+            }
+        }
+        ttCounter += days
+    }
+
+    return attPage
+}
+
 func FindNewAnimes(query string, page string) AnimeSearchPage {
     var aniList = AnimeSearchPage{}
     q := strings.ReplaceAll(query, " ", "+")
 
-    resp, err := aSHttpGet("/anime?page="+page+"&q="+q)
+    err := sJsonHttpUnmarshall(&aniList, "/anime?page="+page+"&q="+q)
     if nil != err {
-        log.Println(err.Error())
-        return AnimeSearchPage{}
-    }
-    defer resp.Body.Close()
-
-    aniListJsonBarr, err := io.ReadAll(resp.Body)
-    if nil != err {
-        log.Println(err.Error())
-        return AnimeSearchPage{}
-    }
-
-    err = json.Unmarshal(aniListJsonBarr, &aniList)
-    if nil != err {
-        log.Println(resp)
-        log.Println(err.Error())
         return AnimeSearchPage{}
     }
 
     aniList.SearchText = query
     aniList.Added = make([]bool, len(aniList.Anime))
-
     dbanime := dbase.Anime{}
     list, _ := dbanime.List()
 
@@ -127,24 +209,7 @@ func FindNewAnimes(query string, page string) AnimeSearchPage {
 func AddorUpdateAnime(route string) (dbase.Anime, error) {
     anime := animeschedule.ShowDetail{}
 
-    resp, err := aSHttpGet("/anime/"+route)
-    if nil != err {
-        log.Println(err.Error())
-        return dbase.Anime{}, err
-    }
-    defer resp.Body.Close()
-
-    aniListJsonBarr, err := io.ReadAll(resp.Body)
-    if nil != err {
-        log.Println(err.Error())
-        return dbase.Anime{}, err
-    }
-
-    err = json.Unmarshal(aniListJsonBarr, &anime)
-    if nil != err {
-        log.Println(err.Error())
-        return dbase.Anime{}, err
-    }
+    err := sJsonHttpUnmarshall(&anime, "/anime/"+route)
 
     dbAnime := dbase.Anime{}
     err = dbAnime.Select(route)
