@@ -11,7 +11,7 @@ func setup_routes() {
     http.HandleFunc("GET /index.html",          pages.Root)
 
     http.HandleFunc("GET /downloads/{title}",   pages.Download)
-    http.HandleFunc("POST /addtorrent",         pages.AddTorrent)
+    http.HandleFunc("GET /addtorrent",          pages.AddTorrent)
     http.HandleFunc("GET /delete/{id}",         pages.DeleteTorrent)
 
     http.HandleFunc("GET /listall",             pages.ListAllTorrents)
@@ -20,6 +20,6 @@ func setup_routes() {
     http.HandleFunc("GET /addanime/{route}",    pages.AddAnime)
 
     http.HandleFunc("GET /listanime/{route}",   pages.ListAnime)
-    http.HandleFunc("POST /addepisode",         pages.AddEpisode)
+    http.HandleFunc("GET /addepisode",          pages.AddEpisode)
     http.HandleFunc("GET /refreshnyaa/{route}/{index}", pages.RefreshNyaa)
 }

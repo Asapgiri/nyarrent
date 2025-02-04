@@ -318,10 +318,17 @@ func AddEpisode(route string, index string, title string, link string, hash stri
     return dbEpisode.Add()
 }
 
+const WEEK_HOUR_DIFF = 24 * 7
 var lastTimetableCheck = time.Now()
 var lastTimetable = animeschedule.Timetable{}
 
 func getCurrentEpisode(anime *dbase.Anime) {
+    if "Finished" == anime.Status {
+        anime.EpisodeCurrent = anime.EpisodeCount
+        anime.EpisodeRelease = anime.SubTime.Add(time.Hour * time.Duration(WEEK_HOUR_DIFF * anime.EpisodeCount))
+        return
+    }
+
     if time.Now().Sub(lastTimetableCheck).Minutes() > 1 {
         err := sJsonHttpUnmarshall(&lastTimetable, "/timetables/sub")
         if nil != err {

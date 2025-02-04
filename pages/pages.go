@@ -96,11 +96,11 @@ func Download(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddTorrent(w http.ResponseWriter, r *http.Request) {
-    link := r.FormValue("link")
+    link := r.URL.Query().Get("link")
 
     logic.AddTorrent(link)
 
-    http.Redirect(w, r, "/", http.StatusSeeOther)
+    http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
 func DeleteTorrent(w http.ResponseWriter, r *http.Request) {
@@ -138,9 +138,11 @@ func ListAnime(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddEpisode(w http.ResponseWriter, r *http.Request) {
-    route := r.FormValue("route")
-    index := r.FormValue("index")
-    link := r.FormValue("link")
+    route := r.URL.Query().Get("route")
+    index := r.URL.Query().Get("index")
+    link := r.URL.Query().Get("link")
+
+    log.Println(link)
 
     title, hash, err := logic.AddTorrent(link)
     if nil == err {

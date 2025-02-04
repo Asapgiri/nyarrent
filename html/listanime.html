@@ -105,7 +105,7 @@
                         L:{{.Leechers}}
                     </div>
                     <div class="col-md-2">
-                        <form method="POST" action="/addepisode">
+                        <form method="GET" action="/addepisode">
                             <div class="input-group">
                                 <input type="text" name="route" value="{{$.Anime.Route}}" hidden>
                                 <input type="text" name="index" value="{{$id}}" hidden>
@@ -121,7 +121,7 @@
                 {{end}}
                 <div class="m-2 overflow-auto small row">
                     <div class="col-md-12">
-                        <form method="POST" action="/addepisode">
+                        <form method="GET" action="/addepisode">
                             <div class="input-group">
                                 <input type="text" name="route" value="{{$.Anime.Route}}" hidden>
                                 <input type="text" name="index" value="{{.Index}}" hidden>
