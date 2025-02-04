@@ -14,7 +14,8 @@ var log = logger.Logger {
 
 func Root(w http.ResponseWriter, r *http.Request) {
     if "/" == r.URL.Path {
-        dto := logic.ListAnimes()
+        fu := r.URL.Query().Get("fu")
+        dto := logic.ListAllAnime("true" == fu)
         dto.SearchText = r.URL.Query().Get("query")
 
         if "" != dto.SearchText {
@@ -40,6 +41,7 @@ func SearchNewAnimes(w http.ResponseWriter, r *http.Request) {
 func ListAllTorrents(w http.ResponseWriter, r *http.Request) {
     tl := logic.DtoBase {
         TorrentList: logic.GetTorrents(),
+        DiskUsage: logic.GetDiskUsage(),
     }
 
     fil, _ := read_artifact("listall.html", w.Header())
@@ -92,7 +94,7 @@ func DeleteTorrent(w http.ResponseWriter, r *http.Request) {
 func AddAnime(w http.ResponseWriter, r *http.Request) {
     route := r.PathValue("route")
 
-    logic.AddAnime(route)
+    logic.AddorUpdateAnime(route)
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
@@ -112,7 +114,10 @@ func AddEpisode(w http.ResponseWriter, r *http.Request) {
 
     title, hash, err := logic.AddTorrent(link)
     if nil == err {
-        logic.AddEpisode(route, index, title, link, hash)
+        err = logic.AddEpisode(route, index, title, link, hash)
+        if nil != err {
+            log.Println(err.Error())
+        }
     }
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)

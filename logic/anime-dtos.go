@@ -9,7 +9,9 @@ import (
 type AnimeSearchPage struct {
     Page        int
     TotalAmount int
+    SearchText  string
     Anime       []animeschedule.ShowDetail
+    Added       []bool
 }
 
 type EpisodeTorrent struct {

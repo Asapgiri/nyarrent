@@ -33,7 +33,17 @@
                 aria-controls="collapse-{{.Index}}">
                 <div class="row">
                     <div class="col-md-2">
+                        <div style="float: left; padding-right: 12px;">
                         {{.Index}}
+                        </div>
+                        {{if .Torrents}}
+                        {{$cellP := index .Torrents 0}}
+                        <div class="progress" style="height: 100%">
+                            <div class="progress-bar bg-{{$cellP.Progress.Color}}" role="progressbar"
+                                style="width: {{$cellP.Progress.Percentage}}%;" aria-valuenow="{{$cellP.Progress.Percentage}}"
+                                aria-valuemin="0" aria-valuemax="100">{{$cellP.Progress.Percentage}}%</div>
+                        </div>
+                        {{end}}
                     </div>
                     <div class="col-md-8">
                         {{.Title}}
@@ -63,7 +73,7 @@
                         <strong><a href="{{.Url}}">{{.Info.Name}}</a></strong>
                     </div>
                     <div class="col-md-2">
-                        {{.Info.TotalSize}}
+                        {{size .Info.TotalSize}}
                     </div>
                 </div>
                 {{end}}
@@ -82,7 +92,7 @@
                         {{.Category}}
                     </div>
                     <div class="col-md-6">
-                        <strong><a href="{{.Link}}">{{.Title}}</a></strong>
+                        <strong><a href="{{.Link}}" target="_blank">{{.Title}}</a></strong>
                     </div>
                     <div class="col-md-2">
                         {{.Size}} /

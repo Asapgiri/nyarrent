@@ -13,4 +13,5 @@ $ sudo apt install transmission-daemon zip ffmpeg
 ```bash
 export NYARRENT_URI="mongodb://localhost:27017"
 export NYARRENT_DATABASE_NAME="nyarrent"
+export AS_API_KEY="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```

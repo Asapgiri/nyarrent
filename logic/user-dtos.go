@@ -16,8 +16,17 @@ type Torrent struct {
     Info        string
 }
 
+type DiskUsage struct {
+    Size    string
+    Used    string
+    Avail   string
+    Percent string
+    Usage   Progress
+}
+
 type DtoBase struct {
     TorrentList []Torrent
+    DiskUsage   DiskUsage
 }
 
 // Transfer related stuff

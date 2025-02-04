@@ -103,7 +103,7 @@ func (anime *Anime) Add() error {
 }
 
 func (anime *Anime) Update() error {
-    _, err := dbSAVED_ANIMES.UpdateByID(context.TODO(), anime.Id, anime)
+    _, err := dbSAVED_ANIMES.ReplaceOne(context.TODO(), bson.D{{"_id", anime.Id}}, anime)
     return err
 
 }
@@ -144,7 +144,7 @@ func (danime *AnimeDownload) Add() error {
 }
 
 func (danime *AnimeDownload) Update() error {
-    _, err := dbDOWNLOADED_EPISODES.UpdateByID(context.TODO(), danime.Id, danime)
+    _, err := dbDOWNLOADED_EPISODES.ReplaceOne(context.TODO(), bson.D{{"_id", danime.Id}}, danime)
     return err
 
 }
@@ -170,7 +170,7 @@ func (nyaached *NyaaCached) Add() error {
 }
 
 func (nyaached *NyaaCached) Update() error {
-    _, err := dbNYAA_CACHE.UpdateByID(context.TODO(), nyaached.Id, nyaached)
+    _, err := dbNYAA_CACHE.ReplaceOne(context.TODO(), bson.D{{"_id", nyaached.Id}}, nyaached)
     return err
 
 }

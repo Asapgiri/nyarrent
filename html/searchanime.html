@@ -3,7 +3,7 @@
         <h6 class="border-bottom border-gray pb-2 mb-0">
             <form method="GET" action="#">
                 <div class="input-group mb-3">
-                    <input type="text" name="query" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="basic-addon2">
+                    <input type="text" name="query" value="{{.SearchText}}" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="basic-addon2">
                     <div class="input-group-append">
                         <button class="btn btn-info" type="submit">Search</button>
                     </div>
@@ -27,26 +27,36 @@
                 </strong>
             </li>
 
-            {{range .Anime}}
-            <li class="list-group-item list-group-item-action p-2 small searchable cursor-pointer" id="colli-{{.Route}}">
+            {{range $i, $a := .Anime}}
+            <li class="list-group-item list-group-item-action p-2 small searchable cursor-pointer" style="{{if (index $.Added $i)}}background: #d3d3d3;{{end}}" id="colli-{{$a.Route}}">
                 <div class="row">
                     <div class="col-md-1">
-                        <img class="card-img-top" src="https://img.animeschedule.net/production/assets/public/img/{{.ImageVersionRoute}}" alt="Card image cap">
+                        {{if not (index $.Added $i)}}
+                        <img class="card-img-top" src="https://img.animeschedule.net/production/assets/public/img/{{$a.ImageVersionRoute}}" alt="Card image cap">
+                        {{end}}
                     </div>
                     <div class="col-md-2">
-                        <strong><a href="#">{{.Title}}</a></strong>
+                        <strong><a href="https://animeschedule.net/anime/{{$a.Route}}" target="_blank">{{$a.Title}}</a></strong>
                     </div>
 
                     <div class="col-md-6">
-                        {{.Description}}
+                        {{if not (index $.Added $i)}}
+                        {{$a.Description}}
+                        {{end}}
                     </div>
 
                     <div class="col-md-1">
                     </div>
                     <div class="col-md-2">
-                        <a href="/addanime/{{.Route}}">
+                        {{if (index $.Added $i)}}
+                        <a href="#">
+                            <button class="btn btn-secondary" style="width: 100%;" type="button" disabled>Already on list</button>
+                        </a>
+                        {{else}}
+                        <a href="/addanime/{{$a.Route}}">
                             <button class="btn btn-primary" style="width: 100%;" type="button">Add to list</button>
                         </a>
+                        {{end}}
                     </div>
                 </div>
             </li>

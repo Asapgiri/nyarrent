@@ -16,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const downloadDisk = "/mnt/d"
 const downloadFolder = "/mnt/d/Download"
 const downloadUrl = "downloads"
 var zipMap = []string{}
@@ -119,7 +120,6 @@ func getFileInfo(path string) (fs.FileInfo, error) {
 func GetTorrentFile(title string, publicPath bool) string {
     path := strings.Join([]string{downloadFolder, title}, "/")
 
-    log.Println(path)
     fileInfo, err := getFileInfo(path)
     if nil != err {
         log.Println(err.Error())
@@ -216,16 +216,30 @@ func GetTorrents() []Torrent {
     return torrents
 }
 
-func AddTorrent(link string) (string, string, error) {
-    stdout, err := exec.Command("transmission-remote", "--list").Output()
+func GetDiskUsage() DiskUsage {
+    stdout, err := exec.Command("df", "-H", downloadDisk).Output()
     if nil != err {
         log.Println(err.Error())
-        log.Println(string(stdout))
-        return "", "", err
+        return DiskUsage{}
     }
-    preLines := strings.Split(string(stdout), "\n")
 
-    stdout, err = exec.Command("transmission-remote", "--add", link).Output()
+    line := strings.Split(string(stdout), "\n")[1]
+    fields := strings.Fields(line)
+    percent, _ := strconv.ParseFloat(strings.Trim(fields[4], "%"), 64)
+
+    diskUsage := DiskUsage{
+        Size:       fields[1],
+        Used:       fields[2],
+        Avail:      fields[3],
+        Percent:    fields[4],
+        Usage:      GenerateProgress(percent / 100),
+    }
+
+    return diskUsage
+}
+
+func AddTorrent(link string) (string, string, error) {
+    stdout, err := exec.Command("transmission-remote", "--add", link).Output()
     if nil != err {
         log.Println(err.Error())
         log.Println(string(stdout))
@@ -240,10 +254,6 @@ func AddTorrent(link string) (string, string, error) {
     }
 
     lines := strings.Split(string(stdout), "\n")
-    if len(preLines) + 1 != len(lines) {
-        log.Println("Line calculated len mismatch...")
-        return "", "", err
-    }
     fields := strings.Fields(lines[len(lines) - 3])
 
     stdout, err = exec.Command("transmission-remote", "-t", fields[0], "-i").Output()
@@ -270,38 +280,6 @@ func DeleteTorrent(id string) {
         return
     }
     log.Println(string(stdout))
-}
-
-func FindNewAnimes(query string, page string) AnimeSearchPage {
-    var aniList = AnimeSearchPage{}
-    q := strings.ReplaceAll(query, " ", "+")
-
-    resp, err := http.Get("https://animeschedule.net/api/v3/anime?page="+page+"&q="+q)
-    if nil != err {
-        log.Println(err.Error())
-        return AnimeSearchPage{}
-    }
-    defer resp.Body.Close()
-
-    aniListJsonBarr, err := io.ReadAll(resp.Body)
-    if nil != err {
-        log.Println(err.Error())
-        return AnimeSearchPage{}
-    }
-
-    err = json.Unmarshal(aniListJsonBarr, &aniList)
-    if nil != err {
-        log.Println(err.Error())
-        return AnimeSearchPage{}
-    }
-
-    log.Println(aniList)
-
-    return aniList
-}
-
-func ListAnimes() DtoAnime {
-    return listAllAnime()
 }
 
 // Nyaa.si related
@@ -349,7 +327,7 @@ func GetNyaaList(title string, episode int, resultCount int, forceRefresh bool) 
             nyaacache.Update()
         }
     } else {
-        log.Println("Episodes exists for: " + q)
+        //log.Println("Episodes exists for: " + q)
         nyaaJson = nyaacache.Nyaa
     }
 

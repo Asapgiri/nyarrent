@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 )
@@ -19,9 +20,23 @@ var file_types = map[string]string {
     "css":  "text",
 }
 
+func sizeToText(size int) string {
+    const kbDiv = 1024.0
+
+    mb := float64(size) / kbDiv / kbDiv
+    gb := mb / kbDiv
+
+    if gb >= 1.0 {
+        return strconv.FormatFloat(gb, 'f', 2, 64) + " GB"
+    } else {
+        return strconv.FormatFloat(mb, 'f', 2, 64) + " MB"
+    }
+}
+
 var funcMap = template.FuncMap {
     "inc": func(i int) int {return i + 1},
     "dec": func(i int) int {return i - 1},
+    "size": sizeToText,
 }
 
 func read_artifact(path string, header http.Header) (string, string) {

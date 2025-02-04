@@ -13,6 +13,14 @@
 
         <ul class="list-group list-group-flush" id="table">
 
+            <li class="list-group-item list-group-item-action p-2">
+                <strong>
+                    <div class="row">
+                        <div class="col-md-12"><a class="btn btn-info" style="float: right;" href="/?fu=true">Refresh all</a></div>
+                    </div>
+                </strong>
+            </li>
+
             <li class="list-group-item list-group-item-action p-2 disabled">
                 <strong>
                     <div class="row">
@@ -35,8 +43,9 @@
 
 
                     <div class="col-md-2">
-                        {{.Anime.EpisodeCurrent}}/{{.Anime.EpisodeCount}}
-                        {{.Anime.Status}}
+                        {{.Anime.EpisodeCount}}/<strong>{{.Anime.EpisodeCurrent}}</strong>
+                        {{.Anime.Status}}<br><br>
+                        {{.Anime.EpisodeRelease.Format "2006-01-02 15:04:05"}}
                     </div>
                 </div>
             </li>

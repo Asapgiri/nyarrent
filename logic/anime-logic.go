@@ -3,10 +3,14 @@ package logic
 import (
 	"encoding/json"
 	"io"
+	"math"
 	"net/http"
 	"nyarrent/dbase"
+	"os"
 	"slices"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/er-azh/go-animeschedule"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,40 +19,25 @@ import (
 // =====================================================================================================================
 // Anime related internal logic...
 
-func listAllAnime() DtoAnime {
+func ListAllAnime(forceUpdate bool) DtoAnime {
     anime := dbase.Anime{}
     list, _ := anime.List()
 
     lAnime := make([]Anime, len(list))
 
     for i, a := range(list) {
+        if forceUpdate {
+            a, _ = AddorUpdateAnime(a.Route)
+        } else {
+            calculateCurrentEpisodeFromTime(&a, a.SubTime)
+            a.Update()
+        }
         lAnime[i].Anime = a
-
-        episodes := dlSelectAll(a)
-        lAnime[i].Episodes = make([]Episodes, a.EpisodeCurrent)
-        for j, _ := range(lAnime[i].Episodes) {
-            lAnime[i].Episodes[j].Index = i + 1
-            lAnime[i].Episodes[j].Title = "null"
-        }
-        for _, episode := range(episodes) {
-            info := getTorrentInfo(episode.Hash)
-            var percent float64
-            if 0 == info.SizeWhenDone {
-                percent = 0.0
-            } else {
-                percent = float64(info.HaveValid) / float64(info.SizeWhenDone)
-            }
-
-            lAnime[i].Episodes[episode.Episode - 1].Title = episode.Title
-            lAnime[i].Episodes[episode.Episode - 1].Torrents =
-                append(lAnime[i].Episodes[episode.Episode - 1].Torrents, EpisodeTorrent{
-                    Torrent: episode,
-                    Info: info,
-                    Progress: GenerateProgress(percent),
-                    Url: GetTorrentFile(info.Name, true),
-                })
-        }
     }
+
+    slices.SortFunc(lAnime, func(a, b Anime) int {
+        return b.Anime.EpisodeRelease.Compare(a.Anime.EpisodeRelease)
+    })
 
     ret := DtoAnime{
         Anime: lAnime,
@@ -78,64 +67,139 @@ func dlDelete(dl dbase.AnimeDownload) error { return nil }
 // =====================================================================================================================
 // Anime related internal downloads logic...
 
-func AddAnime(route string) error {
-    anime := animeschedule.ShowDetail{}
+var AS_API_URL = "https://animeschedule.net/api/v3"
+var AS_API_KEY = os.Getenv("AS_API_KEY")
 
-    resp, err := http.Get("https://animeschedule.net/api/v3/anime/"+route)
+func aSHttpGet(query string) (*http.Response, error) {
+    req, err := http.NewRequest("GET", AS_API_URL + query, nil)
+    if nil != err {
+        return nil, err
+    }
+    if "" != AS_API_KEY {
+        req.Header.Add("Authorization", "Bearer " + AS_API_KEY)
+    }
+    client := http.Client{}
+    return client.Do(req)
+}
+
+func FindNewAnimes(query string, page string) AnimeSearchPage {
+    var aniList = AnimeSearchPage{}
+    q := strings.ReplaceAll(query, " ", "+")
+
+    resp, err := aSHttpGet("/anime?page="+page+"&q="+q)
     if nil != err {
         log.Println(err.Error())
-        return err
+        return AnimeSearchPage{}
     }
     defer resp.Body.Close()
 
     aniListJsonBarr, err := io.ReadAll(resp.Body)
     if nil != err {
         log.Println(err.Error())
-        return err
+        return AnimeSearchPage{}
+    }
+
+    err = json.Unmarshal(aniListJsonBarr, &aniList)
+    if nil != err {
+        log.Println(resp)
+        log.Println(err.Error())
+        return AnimeSearchPage{}
+    }
+
+    aniList.SearchText = query
+    aniList.Added = make([]bool, len(aniList.Anime))
+
+    dbanime := dbase.Anime{}
+    list, _ := dbanime.List()
+
+    for _, l := range(list) {
+        for i, anime := range(aniList.Anime) {
+            if anime.Route == l.Route {
+                aniList.Added[i] = true
+            }
+        }
+    }
+
+    return aniList
+}
+
+
+func AddorUpdateAnime(route string) (dbase.Anime, error) {
+    anime := animeschedule.ShowDetail{}
+
+    resp, err := aSHttpGet("/anime/"+route)
+    if nil != err {
+        log.Println(err.Error())
+        return dbase.Anime{}, err
+    }
+    defer resp.Body.Close()
+
+    aniListJsonBarr, err := io.ReadAll(resp.Body)
+    if nil != err {
+        log.Println(err.Error())
+        return dbase.Anime{}, err
     }
 
     err = json.Unmarshal(aniListJsonBarr, &anime)
     if nil != err {
         log.Println(err.Error())
-        return err
+        return dbase.Anime{}, err
     }
 
-    log.Println(anime)
-
-    dbAnime := dbase.Anime{
-        Id:             primitive.NewObjectID(),
-        Title:          anime.Title,
-        JpTitle:        anime.Names.Japanese,
-        Route:          anime.Route,
-        Banner:         anime.ImageVersionRoute,
-        EpisodeCurrent: anime.Episodes,
-        EpisodeCount:   12,
-        Status:         anime.Status,
-        FullInfo:       anime,
+    dbAnime := dbase.Anime{}
+    err = dbAnime.Select(route)
+    if nil != err {
+        dbAnime.Id = primitive.NewObjectID()
     }
 
-    return dbAnime.Add()
+    dbAnime.Title =         anime.Title
+    dbAnime.JpTitle =       anime.Names.Japanese
+    dbAnime.Route =         anime.Route
+    dbAnime.Banner =        anime.ImageVersionRoute
+    dbAnime.EpisodeCount =  anime.Episodes
+    dbAnime.Status =        anime.Status
+    dbAnime.JpnTime =       anime.JpnTime
+    dbAnime.SubTime =       anime.SubTime
+    dbAnime.FullInfo =      anime
+
+    calculateCurrentEpisodeFromTime(&dbAnime, dbAnime.SubTime)
+
+    if nil != err {
+        return dbAnime, dbAnime.Add()
+    } else {
+        return dbAnime, dbAnime.Update()
+    }
 }
 
 func ListAnime(route string) Anime {
     dbAnime := dbase.Anime{}
     dbAnime.Select(route)
+    calculateCurrentEpisodeFromTime(&dbAnime, dbAnime.SubTime)
 
     episodes := make([]Episodes, dbAnime.EpisodeCurrent)
     dbEpisodes := dlSelectAll(dbAnime)
 
+    log.Println(dbEpisodes)
+
     for _, episode := range(dbEpisodes) {
         info := getTorrentInfo(episode.Hash)
-        percent := float64(info.HaveValid) / float64(info.SizeWhenDone)
+        var percent float64
+        if 0 != info.SizeWhenDone {
+            percent = float64(info.HaveValid) / float64(info.SizeWhenDone)
+        } else {
+            percent = 0.0
+        }
 
-        episodes[episode.Episode - 1].Title = episode.Title
-        episodes[episode.Episode - 1].Torrents =
-            append(episodes[episode.Episode - 1].Torrents, EpisodeTorrent{
-                Torrent: episode,
-                Info: getTorrentInfo(episode.Hash),
-                Progress: GenerateProgress(percent),
-                Url: GetTorrentFile(info.Name, true),
-            })
+        if dbAnime.EpisodeCurrent >= episode.Episode {
+            episodes[episode.Episode - 1].Title = episode.Title
+            episodes[episode.Episode - 1].Torrents =
+                append(episodes[episode.Episode - 1].Torrents, EpisodeTorrent{
+                    Torrent: episode,
+                    Info: getTorrentInfo(episode.Hash),
+                    Progress: GenerateProgress(percent),
+                    Url: GetTorrentFile(info.Name, true),
+                })
+        }
     }
 
     for i, _ := range(episodes) {
@@ -145,7 +209,7 @@ func ListAnime(route string) Anime {
             episodes[i].Title = "null"
         }
         if 0 == len(episodes[i].Torrents) {
-            log.Printf("Getting nyaa for episode %s - ep%d\n", dbAnime.Title, idx)
+            //log.Printf("Getting nyaa for episode %s - ep%d\n", dbAnime.Title, idx)
             episodes[i].Nyaa = GetNyaaList(dbAnime.Title, idx, 10, false)
         }
     }
@@ -178,4 +242,19 @@ func AddEpisode(route string, index string, title string, link string, hash stri
         Hash:       hash,
     }
     return dbEpisode.Add()
+}
+
+func calculateCurrentEpisodeFromTime(anime *dbase.Anime, startTime time.Time) {
+    const WEEK_HOUR_DIFF = 24 * 7
+    diff := time.Now().Sub(startTime)
+    weeks := int(math.Floor(diff.Hours() / WEEK_HOUR_DIFF))
+
+    if anime.EpisodeCount < 1 + weeks {
+        weeks = anime.EpisodeCount - 1
+    }
+
+    // TODO: Calculate delays and dates stuff correctly...
+
+    anime.EpisodeCurrent = 1 + weeks
+    anime.EpisodeRelease = startTime.Add(time.Hour * time.Duration(weeks * WEEK_HOUR_DIFF))
 }

@@ -1,6 +1,8 @@
 package dbase
 
 import (
+	"time"
+
 	"github.com/er-azh/go-animeschedule"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -12,8 +14,11 @@ type Anime struct {
     Route           string
     Banner          string
     EpisodeCurrent  int
+    EpisodeRelease  time.Time
     EpisodeCount    int
     Status          string
+    JpnTime         time.Time
+    SubTime         time.Time
     FullInfo        animeschedule.ShowDetail
 }
 
