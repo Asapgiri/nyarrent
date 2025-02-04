@@ -27,7 +27,7 @@
                 </strong>
             </li>
 
-            {{range .Episodes}}
+            {{range $i, $e := .Episodes}}
             <li class="list-group-item list-group-item-action p-2 small searchable cursor-pointer" id="colli-{{.Index}}"
                 data-bs-toggle="collapse" data-bs-target="#collapse-{{.Index}}" aria-expanded="false"
                 aria-controls="collapse-{{.Index}}">
@@ -43,6 +43,8 @@
                                 style="width: {{$cellP.Progress.Percentage}}%;" aria-valuenow="{{$cellP.Progress.Percentage}}"
                                 aria-valuemin="0" aria-valuemax="100">{{$cellP.Progress.Percentage}}%</div>
                         </div>
+                        {{else if and (eq $i 0) (timegt now $.Anime.EpisodeRelease)}}
+                        Airing at: {{$.Anime.EpisodeRelease.Format "2006-01-02 15:04:05"}}
                         {{end}}
                     </div>
                     <div class="col-md-8">

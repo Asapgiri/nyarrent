@@ -3,7 +3,6 @@ package logic
 import (
 	"encoding/json"
 	"io"
-	"math"
 	"net/http"
 	"nyarrent/dbase"
 	"os"
@@ -29,14 +28,24 @@ func ListAllAnime(forceUpdate bool) DtoAnime {
         if forceUpdate {
             a, _ = AddorUpdateAnime(a.Route)
         } else {
-            calculateCurrentEpisodeFromTime(&a, a.SubTime)
+            getCurrentEpisode(&a)
             a.Update()
         }
         lAnime[i].Anime = a
     }
 
     slices.SortFunc(lAnime, func(a, b Anime) int {
-        return b.Anime.EpisodeRelease.Compare(a.Anime.EpisodeRelease)
+        if "Ongoing" != a.Anime.Status && "Ongoing" == b.Anime.Status {
+            return 1
+        } else if "Ongoing" == a.Anime.Status && "Ongoing" != b.Anime.Status {
+            return -1
+        } else if time.Now().Compare(a.Anime.EpisodeRelease) <= 0 && time.Now().Compare(b.Anime.EpisodeRelease) > 0 {
+            return 1
+        } else if time.Now().Compare(a.Anime.EpisodeRelease) > 0 && time.Now().Compare(b.Anime.EpisodeRelease) <= 0 {
+            return -1
+        } else {
+            return b.Anime.EpisodeRelease.Compare(a.Anime.EpisodeRelease)
+        }
     })
 
     ret := DtoAnime{
@@ -227,7 +236,7 @@ func AddorUpdateAnime(route string) (dbase.Anime, error) {
     dbAnime.SubTime =       anime.SubTime
     dbAnime.FullInfo =      anime
 
-    calculateCurrentEpisodeFromTime(&dbAnime, dbAnime.SubTime)
+    getCurrentEpisode(&dbAnime)
 
     if nil != err {
         return dbAnime, dbAnime.Add()
@@ -239,7 +248,7 @@ func AddorUpdateAnime(route string) (dbase.Anime, error) {
 func ListAnime(route string) Anime {
     dbAnime := dbase.Anime{}
     dbAnime.Select(route)
-    calculateCurrentEpisodeFromTime(&dbAnime, dbAnime.SubTime)
+    getCurrentEpisode(&dbAnime)
 
     episodes := make([]Episodes, dbAnime.EpisodeCurrent)
     dbEpisodes := dlSelectAll(dbAnime)
@@ -309,17 +318,25 @@ func AddEpisode(route string, index string, title string, link string, hash stri
     return dbEpisode.Add()
 }
 
-func calculateCurrentEpisodeFromTime(anime *dbase.Anime, startTime time.Time) {
-    const WEEK_HOUR_DIFF = 24 * 7
-    diff := time.Now().Sub(startTime)
-    weeks := int(math.Floor(diff.Hours() / WEEK_HOUR_DIFF))
+var lastTimetableCheck = time.Now()
+var lastTimetable = animeschedule.Timetable{}
 
-    if anime.EpisodeCount < 1 + weeks {
-        weeks = anime.EpisodeCount - 1
+func getCurrentEpisode(anime *dbase.Anime) {
+    if time.Now().Sub(lastTimetableCheck).Minutes() > 1 {
+        err := sJsonHttpUnmarshall(&lastTimetable, "/timetables/sub")
+        if nil != err {
+            return
+        }
+        lastTimetableCheck = time.Now()
     }
 
-    // TODO: Calculate delays and dates stuff correctly...
+    timetable := lastTimetable
 
-    anime.EpisodeCurrent = 1 + weeks
-    anime.EpisodeRelease = startTime.Add(time.Hour * time.Duration(weeks * WEEK_HOUR_DIFF))
+    for _, tanime := range(timetable) {
+        if anime.Route == tanime.Route {
+            anime.EpisodeCurrent = tanime.EpisodeNumber
+            anime.EpisodeRelease = tanime.EpisodeDate
+            return
+        }
+    }
 }

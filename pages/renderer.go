@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 )
 
 var artifact_path string = "artifacts/"
@@ -34,9 +35,12 @@ func sizeToText(size int) string {
 }
 
 var funcMap = template.FuncMap {
-    "inc": func(i int) int {return i + 1},
-    "dec": func(i int) int {return i - 1},
-    "size": sizeToText,
+    "inc":      func(i int) int {return i + 1},
+    "dec":      func(i int) int {return i - 1},
+    "size":     sizeToText,
+    "timegt":   func(a time.Time, b time.Time) bool {return b.Compare(a) > 0},
+    "timelt":   func(a time.Time, b time.Time) bool {return b.Compare(a) <= 0},
+    "now":      time.Now,
 }
 
 func read_artifact(path string, header http.Header) (string, string) {
