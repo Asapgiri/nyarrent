@@ -26,6 +26,7 @@ type AnimeWeek [7]TimetableShow
 type AnimeTimetableFilter struct {
     OnlyOnList  bool
     SendBack    bool
+    Hash        string
 }
 
 type AnimeTimetablePage struct {

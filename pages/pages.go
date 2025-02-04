@@ -30,10 +30,24 @@ func Root(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+var filterMap = map[string]logic.AnimeTimetableFilter{}
+
 func ListTimetables(w http.ResponseWriter, r *http.Request) {
     filter := logic.AnimeTimetableFilter{
         OnlyOnList: r.URL.Query().Get("onlyonlist") == "on",
         SendBack: r.URL.Query().Has("sendback"),
+        Hash: r.URL.Query().Get("hash"),
+    }
+
+    cookie, err := r.Cookie("formathash")
+    if nil == err {
+        val, ok := filterMap[cookie.Value]
+        if !ok || r.URL.Query().Has("sendback") || r.URL.Query().Has("onlyonlist") || r.URL.Query().Has("hash") {
+            filter.Hash = cookie.Value
+            filterMap[cookie.Value] = filter
+        } else if ok {
+            filter = val
+        }
     }
 
     fil, _ := read_artifact("timetables.html", w.Header())

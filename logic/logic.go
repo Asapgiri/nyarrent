@@ -185,7 +185,7 @@ func timeAgo(date int64) string {
 
     pastForm := ""
 
-    if diff.Hours() < 3 {
+    if diff.Hours() <= 24 {
         hours := int64(math.Floor(diff.Hours()))
         minutes := int64(math.Floor(diff.Minutes())) % 60
         seconds := int64(math.Floor(diff.Seconds())) % 60

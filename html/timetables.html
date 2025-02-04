@@ -10,6 +10,7 @@
                 </div>
                 <div class="card-footer">
                     <form method="GET">
+                        <input type="text" name="hash" id="hash" value="{{.Filter.Hash}}" hidden>
                         <div class="form-check form-switch" style="float: left;">
                             <input class="form-check-input" type="checkbox" name="onlyonlist" id="onlyonlist" onChange="this.form.submit()" {{if .Filter.OnlyOnList}}checked{{end}}>
                             <label class="form-check-label" for="flexSwitchCheckDefault">Only Show "Alredy on list"</label>
