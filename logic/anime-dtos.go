@@ -46,11 +46,30 @@ type Episodes struct {
     Title       string
     Torrents    []EpisodeTorrent
     Nyaa        []dbase.NyaaData
+    NyaaText    string
+}
+
+type NyaaFilter struct {
+    Group       string
+    NameParams  string
+    Category    string
+    SubCategory string
+    ResultCount string
+    Resolution  string
+    EpisodeFmt  string
+    SeasonFmt   string
+    ForseRefrsh bool
+}
+
+type EpisodeFilter struct {
+    Nyaa    NyaaFilter
+    Hash    string
 }
 
 type Anime struct {
     Anime       dbase.Anime
     Episodes    []Episodes
+    Filter      EpisodeFilter
 }
 
 type DtoAnime struct {

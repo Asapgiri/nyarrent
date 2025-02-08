@@ -309,51 +309,82 @@ func AddTorrent(link string) (string, string, error) {
     return title, hash, nil
 }
 
-func DeleteTorrent(id string) {
-    cmd := exec.Command("transmission-remote", "-t", id, "-rad")
-
-    stdout, err := cmd.Output()
+func DelTorrent(id string) (string, string, error) {
+    stdout, err := exec.Command("transmission-remote", "-t", id, "-i").Output()
     if nil != err {
         log.Println(err.Error())
         log.Println(string(stdout))
-        return
+        return "", "", err
+    }
+    lines := strings.Split(string(stdout), "\n")
+
+    title := strings.Join(strings.Fields(lines[2])[1:], " ")
+    hash := strings.Fields(lines[3])[1]
+
+    stdout, err = exec.Command("transmission-remote", "-t", id, "-rad").Output()
+    if nil != err {
+        log.Println(err.Error())
+        log.Println(string(stdout))
+        return "", "", err
     }
     log.Println(string(stdout))
+
+    return title, hash, nil
 }
 
 // Nyaa.si related
 
-func GetNyaaList(title string, episode int, resultCount int, forceRefresh bool) []dbase.NyaaData {
+func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.NyaaData) {
     var q string
-    if len(strings.Split(title, " ")) > 2 {
-        q = strings.Join(strings.Split(title, " ")[:2], "+")
+    nameLen, err := strconv.ParseInt(filter.NameParams, 10, 64)
+    if nil != err {
+        nameLen = 2
+    }
+    if len(strings.Split(title, " ")) > int(nameLen) {
+        q = strings.Join(strings.Split(title, " ")[:nameLen], "+")
     } else {
         q = strings.Replace(title, " ", "+", 0)
     }
-    q = q + "+" + strconv.FormatInt(int64(episode), 10)
+
+    q = strings.Join([]string{
+        filter.Group,
+        q,
+        strconv.FormatInt(int64(episode), 10),
+        filter.Resolution,
+    }, "+")
     nyaaJson := dbase.NyaaJson{}
+
+    if "" == filter.Category {
+        filter.Category = "anime"
+    }
+    query := []string{
+        "q=",               q,
+        "&category=",       filter.Category,
+        "&sub_category=",   filter.SubCategory,
+    }
+    queryStr := strings.Join(query, "")
 
     nyaacache := dbase.NyaaCached{}
     nyaacache.Select(title, episode)
-    if "" == nyaacache.Title || forceRefresh {
+    if "" == nyaacache.Title || filter.ForseRefrsh {
         log.Println("Getting episode for: " + q)
-        resp, err := http.Get("https://nyaaapi.onrender.com/nyaa?q="+q)
+        resp, err := http.Get("https://nyaaapi.onrender.com/nyaa?"+queryStr)
         if nil != err {
             log.Println(err.Error())
-            return []dbase.NyaaData{}
+            return queryStr, []dbase.NyaaData{}
         }
         defer resp.Body.Close()
 
         aniListJsonBarr, err := io.ReadAll(resp.Body)
         if nil != err {
             log.Println(err.Error())
-            return []dbase.NyaaData{}
+            return queryStr, []dbase.NyaaData{}
         }
 
         err = json.Unmarshal(aniListJsonBarr, &nyaaJson)
         if nil != err {
             log.Println(err.Error())
-            return []dbase.NyaaData{}
+            return queryStr, []dbase.NyaaData{}
         }
 
         nyaacache.Episode = episode
@@ -370,16 +401,25 @@ func GetNyaaList(title string, episode int, resultCount int, forceRefresh bool) 
         nyaaJson = nyaacache.Nyaa
     }
 
-
-    if len(nyaaJson.Data) >= resultCount {
-        return nyaaJson.Data[:resultCount]
+    resultCount, err := strconv.ParseInt(filter.ResultCount, 10, 64)
+    if nil == err && len(nyaaJson.Data) >= int(resultCount) {
+        return queryStr, nyaaJson.Data[:resultCount]
     } else {
-        return nyaaJson.Data
+        return queryStr, nyaaJson.Data
     }
 
 }
 
-func RefreshNyaa(route string, episode string) {
+func DeleteNyaaCached(title string, episode int) error {
+    nyaacache := dbase.NyaaCached{}
+    err := nyaacache.Select(title, episode)
+    if nil != err {
+        return err
+    }
+    return nyaacache.Delete()
+}
+
+func RefreshNyaa(route string, episode string, filter NyaaFilter) {
     dbAnime := dbase.Anime{}
     dbAnime.Select(route)
 
@@ -388,5 +428,6 @@ func RefreshNyaa(route string, episode string) {
         return
     }
 
-    GetNyaaList(dbAnime.Title, int(epiInt), 10, true)
+    filter.ForseRefrsh = true
+    GetNyaaList(dbAnime.Title, int(epiInt), filter)
 }

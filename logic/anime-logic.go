@@ -2,6 +2,7 @@ package logic
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"nyarrent/dbase"
@@ -245,7 +246,7 @@ func AddorUpdateAnime(route string) (dbase.Anime, error) {
     }
 }
 
-func ListAnime(route string) Anime {
+func ListAnime(route string, filter *EpisodeFilter) Anime {
     dbAnime := dbase.Anime{}
     dbAnime.Select(route)
     getCurrentEpisode(&dbAnime)
@@ -284,16 +285,18 @@ func ListAnime(route string) Anime {
         }
         if 0 == len(episodes[i].Torrents) {
             //log.Printf("Getting nyaa for episode %s - ep%d\n", dbAnime.Title, idx)
-            episodes[i].Nyaa = GetNyaaList(dbAnime.Title, idx, 10, false)
+            episodes[i].NyaaText, episodes[i].Nyaa = GetNyaaList(dbAnime.Title, idx, filter.Nyaa)
         }
     }
 
-
     slices.Reverse(episodes)
+    // Doing it at every load would be annoying...
+    filter.Nyaa.ForseRefrsh = false
 
     anime := Anime{
         Anime: dbAnime,
         Episodes: episodes,
+        Filter: *filter,
     }
 
     return anime
@@ -315,7 +318,31 @@ func AddEpisode(route string, index string, title string, link string, hash stri
         Link:       link,
         Hash:       hash,
     }
-    return dbEpisode.Add()
+
+    err = dbEpisode.Add()
+    if nil != err {
+        return err
+    }
+
+    return DeleteNyaaCached(title, dbEpisode.Episode)
+}
+
+func DelEpisode(route string, hash string) error {
+    anime := dbase.Anime{}
+    err := anime.Select(route)
+    if nil != err {
+        return err
+    }
+
+    episodes := dlSelectAll(anime)
+
+    for _, e := range(episodes) {
+        if e.Hash == hash {
+            return e.Delete()
+        }
+    }
+
+    return errors.New("Can't find episode...")
 }
 
 const WEEK_HOUR_DIFF = 24 * 7

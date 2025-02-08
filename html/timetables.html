@@ -24,54 +24,60 @@
             </div>
         </div>
 
-
+        {{$date := (index (index .AnimeWeek 0) 0).Anime.EpisodeDate}}
         <div class="card-group">
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">
-                        Monday
+                        {{$date.Format "01.02"}} - Monday
                     </h5>
                 </div>
             </div>
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">
-                        Tuesday
+                        {{$date = $date.Add day}}
+                        {{$date.Format "01.02"}} - Tuesday
                     </h5>
                 </div>
             </div>
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">
-                        Wednesday
+                        {{$date = $date.Add day}}
+                        {{$date.Format "01.02"}} - Wednesday
                     </h5>
                 </div>
             </div>
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">
-                        Thursday
+                        {{$date = $date.Add day}}
+                        {{$date.Format "01.02"}} - Thursday
                     </h5>
                 </div>
             </div>
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">
-                        Friday
+                        {{$date = $date.Add day}}
+                        {{$date.Format "01.02"}} - Friday
                     </h5>
                 </div>
             </div>
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">
-                        Saturday
+                        {{$date = $date.Add day}}
+                        {{$date.Format "01.02"}} - Saturday
                     </h5>
                 </div>
             </div>
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">
-                        Sunday
+                        {{$date = $date.Add day}}
+                        {{$date.Format "01.02"}} - Sunday
                     </h5>
                 </div>
             </div>
@@ -85,26 +91,24 @@
             {{else}}
             <div class="card" style="{{if .Aired}}background: #ffffc5;{{else if and .Added (not $.Filter.OnlyOnList)}}background: #d3d3d3;{{end}}">
                 <a href="{{if .Added}}/listanime/{{else}}https://animeschedule.net/anime/{{end}}{{.Anime.Route}}" {{if not .Added}}target="_blank"{{end}}>
-                    <img src="https://img.animeschedule.net/production/assets/public/img/{{.Anime.ImageVersionRoute}}" class="card-img-top" alt="{{.Anime.Title}}">
+                    <img src="https://img.animeschedule.net/production/assets/public/img/{{.Anime.ImageVersionRoute}}" class="card-img-top" alt="{{.Anime.Title}}" title="{{.Anime.Title}}" style="height: 260px; object-fit: cover;">
                 </a>
                 <div class="card-body">
                     <h5 class="card-title">
                         {{.Anime.Episodes}}/<strong>{{.Anime.EpisodeNumber}}</strong>
                         {{.Anime.Status}}
                     </h5>
-                    <p class="card-text">
-                    <strong><a href="{{if .Added}}/listanime/{{else}}https://animeschedule.net/anime/{{end}}{{.Anime.Route}}" {{if not .Added}}target="_blank"{{end}}>{{.Anime.Title}}</a></strong>
+                    <p class="card-text" style="max-height: 72px; overflow: hidden;">
+                        <strong><a href="{{if .Added}}/listanime/{{else}}https://animeschedule.net/anime/{{end}}{{.Anime.Route}}" {{if not .Added}}target="_blank"{{end}} alt="{{.Anime.Title}}" title="{{.Anime.Title}}">{{.Anime.Title}}</a></strong>
                     </p>
                 </div>
-                <div class="card-footer">
-                    <small class="text-muted">
-                        {{.Anime.EpisodeDate.Format "2006-01-02 15:04:05"}}
-                        {{if .Aired}}
-                        Out
-                        {{end}}
-                    </small>
+                <div class="card-footer text-center p-0">
+                    {{.Anime.EpisodeDate.Format "15:04"}}
+                    {{if .Aired}}
+                    Out
+                    {{end}}
                 </div>
-                <div class="card-footer">
+                <div class="card-footer p-0">
                     {{if .Added}}
                     <a href="/listanime/{{.Anime.Route}}">
                         <button class="btn btn-secondary disabled" style="width: 100%;" type="button" disabled>Already on list</button>

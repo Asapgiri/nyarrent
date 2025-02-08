@@ -21,5 +21,6 @@ func setup_routes() {
 
     http.HandleFunc("GET /listanime/{route}",   pages.ListAnime)
     http.HandleFunc("GET /addepisode",          pages.AddEpisode)
+    http.HandleFunc("GET /delepisode",          pages.DelEpisode)
     http.HandleFunc("GET /refreshnyaa/{route}/{index}", pages.RefreshNyaa)
 }

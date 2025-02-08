@@ -30,28 +30,16 @@ func Root(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-var filterMap = map[string]logic.AnimeTimetableFilter{}
-
 func ListTimetables(w http.ResponseWriter, r *http.Request) {
-    filter := logic.AnimeTimetableFilter{
-        OnlyOnList: r.URL.Query().Get("onlyonlist") == "on",
-        SendBack: r.URL.Query().Has("sendback"),
-        Hash: r.URL.Query().Get("hash"),
-    }
+    filter := getMap(r)
 
-    cookie, err := r.Cookie("formathash")
-    if nil == err {
-        val, ok := filterMap[cookie.Value]
-        if !ok || r.URL.Query().Has("sendback") || r.URL.Query().Has("onlyonlist") || r.URL.Query().Has("hash") {
-            filter.Hash = cookie.Value
-            filterMap[cookie.Value] = filter
-        } else if ok {
-            filter = val
-        }
-    }
+    filter.AnimeTimetable.OnlyOnList = r.URL.Query().Get("onlyonlist") == "on"
+    filter.AnimeTimetable.SendBack = r.URL.Query().Has("sendback")
+
+    refreshMap(&filter, r, "sendback", "onlyonlist")
 
     fil, _ := read_artifact("timetables.html", w.Header())
-    Render(w, fil, logic.ListTimetables(filter))
+    Render(w, fil, logic.ListTimetables(filter.AnimeTimetable))
 }
 
 func SearchNewAnimes(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +96,7 @@ func DeleteTorrent(w http.ResponseWriter, r *http.Request) {
 
     log.Printf("path:  %s\n", r.URL.Path)
 
-    logic.DeleteTorrent(id)
+    logic.DelTorrent(id)
 
     http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -131,10 +119,22 @@ func AddAnime(w http.ResponseWriter, r *http.Request) {
 
 func ListAnime(w http.ResponseWriter, r *http.Request) {
     route := r.PathValue("route")
-    anime := logic.ListAnime(route)
+
+    filter := getMap(r)
+
+    filter.Episode.Nyaa.Group = r.URL.Query().Get("group")
+    filter.Episode.Nyaa.Category = r.URL.Query().Get("category")
+    filter.Episode.Nyaa.SubCategory = r.URL.Query().Get("subcategory")
+    filter.Episode.Nyaa.ResultCount = r.URL.Query().Get("resultcount")
+    filter.Episode.Nyaa.NameParams = r.URL.Query().Get("nameparams")
+    filter.Episode.Nyaa.Resolution = r.URL.Query().Get("resolution")
+    filter.Episode.Nyaa.ForseRefrsh = r.URL.Query().Has("forcerefresh")
+
+    refreshMap(&filter, r, "category", "subcategory", "resultcount", "nameparams", "forcerefresh")
 
     fil, _ := read_artifact("listanime.html", w.Header())
-    Render(w, fil, anime)
+    Render(w, fil, logic.ListAnime(route, &filter.Episode))
+    refreshMap(&filter, r)
 }
 
 func AddEpisode(w http.ResponseWriter, r *http.Request) {
@@ -155,11 +155,31 @@ func AddEpisode(w http.ResponseWriter, r *http.Request) {
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
 
+func DelEpisode(w http.ResponseWriter, r *http.Request) {
+    route := r.URL.Query().Get("route")
+    hash := r.URL.Query().Get("hash")
+
+    log.Println(hash)
+
+    _, hash, err := logic.DelTorrent(hash)
+    if nil == err {
+        err = logic.DelEpisode(route, hash)
+        if nil != err {
+            log.Println(err.Error())
+        }
+    }
+
+    http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
+}
+
 func RefreshNyaa(w http.ResponseWriter, r *http.Request) {
     route := r.PathValue("route")
     index := r.PathValue("index")
 
-    logic.RefreshNyaa(route, index)
+    filter := getMap(r)
+    refreshMap(&filter, r)
+
+    logic.RefreshNyaa(route, index, filter.Episode.Nyaa)
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }

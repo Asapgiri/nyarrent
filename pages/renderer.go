@@ -41,6 +41,7 @@ var funcMap = template.FuncMap {
     "timegt":   func(a time.Time, b time.Time) bool {return b.Compare(a) > 0},
     "timelt":   func(a time.Time, b time.Time) bool {return b.Compare(a) <= 0},
     "now":      time.Now,
+    "day":      func() time.Duration {return time.Hour * 24},
 }
 
 func read_artifact(path string, header http.Header) (string, string) {
@@ -86,6 +87,7 @@ func Render(w http.ResponseWriter, temp string, dto any) {
         var tpl bytes.Buffer
         dto_tmp, err := template.New("Dto").Funcs(funcMap).Parse(temp)
         if nil != err {
+            log.Println(err.Error())
             return
         }
         dto_tmp.Execute(&tpl, dto)

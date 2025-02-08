@@ -18,6 +18,86 @@
             </div>
         </div>
 
+        <div class="card-group my-1">
+            <div class="card">
+                <div class="card-body py-1">
+                    <h5 class="card-title mb-0">
+                        Nyaa Filter
+                    </h5>
+                </div>
+                <div class="card-footer">
+                    <form method="GET">
+                        <input type="text" name="hash" id="hash" value="{{.Filter.Hash}}" hidden>
+
+                        <div class="" style="float: left; margin-right: 12px;">
+                            <select class="form-select" name="category" id="category" aria-label="Category" disabled>
+                                <option value="anime">Anime</option>
+                            </select>
+                        </div>
+
+                        <div class="" style="float: left; margin-right: 12px;">
+                            <select class="form-select" name="subcategory" id="subcategory" aria-label="Category">
+                                <option value="eng" {{if eq .Filter.Nyaa.SubCategory "eng"}}selected{{end}}>- English</option>
+                                <option value="raw" {{if eq .Filter.Nyaa.SubCategory "raw"}}selected{{end}}>- Raw</option>
+                                <option value=""    {{if eq .Filter.Nyaa.SubCategory ""   }}selected{{end}}>- All</option>
+                            </select>
+                        </div>
+
+                        <div class="" style="float: left; margin-right: 12px;">
+                            <select class="form-select" name="group" id="group" aria-label="Group">
+                                <option value="EMBER"      {{if eq .Filter.Nyaa.Group "EMBER"     }}selected{{end}}>EMBER</option>
+                                <option value="Erai-raws"  {{if eq .Filter.Nyaa.Group "Erai-raws" }}selected{{end}}>Erai-raws</option>
+                                <option value="NanakoRaws" {{if eq .Filter.Nyaa.Group "NanakoRaws"}}selected{{end}}>NanakoRaws</option>
+                                <option value="ToonsHub"   {{if eq .Filter.Nyaa.Group "ToonsHub"  }}selected{{end}}>ToonsHub</option>
+                                <option value="LostYears"  {{if eq .Filter.Nyaa.Group "LostYears" }}selected{{end}}>LostYears</option>
+                                <option value=""           {{if eq .Filter.Nyaa.Group ""         }}selected{{end}}></option>
+                            </select>
+                        </div>
+
+                        <div class="" style="float: left; margin-right: 12px;">
+                            <select class="form-select" name="resultcount" id="resultcount" aria-label="Results">
+                                <option value="5"   {{if eq .Filter.Nyaa.ResultCount "5"  }}selected{{end}}>Results - 5</option>
+                                <option value="10"  {{if eq .Filter.Nyaa.ResultCount "10" }}selected{{end}}>Results - 10</option>
+                                <option value="15"  {{if eq .Filter.Nyaa.ResultCount "15" }}selected{{end}}>Results - 15</option>
+                                <option value="25"  {{if eq .Filter.Nyaa.ResultCount "25" }}selected{{end}}>Results - 25</option>
+                                <option value="100" {{if eq .Filter.Nyaa.ResultCount "100"}}selected{{end}}>Results - All</option>
+                            </select>
+                        </div>
+
+                        <div class="" style="float: left; margin-right: 12px;">
+                            <select class="form-select" name="nameparams" id="nameparams" aria-label="Results">
+                                <option value="2"   {{if eq .Filter.Nyaa.NameParams "2"  }}selected{{end}}>NP - 2</option>
+                                <option value="3"   {{if eq .Filter.Nyaa.NameParams "3"  }}selected{{end}}>NP - 3</option>
+                                <option value="4"   {{if eq .Filter.Nyaa.NameParams "4"  }}selected{{end}}>NP - 4</option>
+                                <option value="5"   {{if eq .Filter.Nyaa.NameParams "5"  }}selected{{end}}>NP - 5</option>
+                                <option value="100" {{if eq .Filter.Nyaa.NameParams "100"}}selected{{end}}>NP - All</option>
+                            </select>
+                        </div>
+
+                        <div class="" style="float: left; margin-right: 12px;">
+                            <select class="form-select" name="resolution" id="resolution" aria-label="Results">
+                                <option value="1080p" {{if eq .Filter.Nyaa.Resolution "1080p" }}selected{{end}}>1080p</option>
+                                <option value="720p"  {{if eq .Filter.Nyaa.Resolution "720p"  }}selected{{end}}>720p</option>
+                                <option value=""      {{if eq .Filter.Nyaa.Resolution ""      }}selected{{end}}>All res</option>
+                            </select>
+                        </div>
+
+                        <div class="" style="float: left; margin-right: 12px;">
+                            <div class="form-check form-switch my-2">
+                                <input class="form-check-input" type="checkbox" name="forcerefresh" id="forcerefresh" {{if .Filter.Nyaa.ForseRefrsh}}checked{{end}}>
+                                <label class="form-check-label" for="forcerefresh">Force refresh</label>
+                            </div>
+                        </div>
+
+                        <div class="" style="float: left; margin-right: 12px;">
+                            <button type="submit" class="btn btn-primary">Save Filter</button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <ul class="list-group list-group-flush" id="table">
 
             <li class="list-group-item list-group-item-action p-2 disabled">
@@ -66,7 +146,7 @@
                 {{$id := .Index}}
                 {{if .Torrents}}
                 {{range .Torrents}}
-                <div class="m-2 overflow-auto small row">
+                <div class="m-2 pb-1 border-bottom overflow-auto small row">
                     <div class="col-md-2">
                         <div class="progress" style="height: 100%">
                             <div class="progress-bar bg-{{.Progress.Color}}" role="progressbar"
@@ -78,21 +158,35 @@
                         <strong><a href="{{.Url}}">{{.Info.Name}}</a></strong>
                     </div>
                     <div class="col-md-2">
+                        <div style="float: left; padding-right: 12px;">
                         {{size .Info.TotalSize}}
+                        </div>
+                        <form method="GET" action="/delepisode" style="float: right;">
+                            <div class="input-group">
+                                <input type="text" name="route" value="{{$.Anime.Route}}" hidden>
+                                <input type="text" name="hash"  value="{{.Torrent.Hash}}" hidden>
+                                <div class="input-group-append" style="width: 100%">
+                                    <button class="btn btn-danger py-0" type="submit" style="width: 100%">Remove</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
                 {{end}}
                 {{else}}
-                <div class="m-2 overflow-auto small row">
-                    <div class="col-md-8">
-                        Nothing Downloaded for episode {{.Index}}.
+                <div class="m-2 mb-3 overflow-auto small row">
+                    <div class="col-md-2">
+                        Nothing Downloaded for episode
+                    </div>
+                    <div class="col-md-6">
+                        Search string: {{.NyaaText}}
                     </div>
                     <div class="col-md-4">
-                        <a href="/refreshnyaa/{{$.Anime.Route}}/{{$id}}">Refresh nyaa list</a>
+                        <a class="btn btn-warning py-0" href="/refreshnyaa/{{$.Anime.Route}}/{{$id}}?hash={{$.Filter.Hash}}">Refresh nyaa list</a>
                     </div>
                 </div>
                 {{range .Nyaa}}
-                <div class="m-2 overflow-auto small row">
+                <div class="m-2 border-bottom overflow-auto small row">
                     <div class="col-md-2">
                         {{.Category}}
                     </div>
