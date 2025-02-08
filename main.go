@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"nyarrent/config"
 	"nyarrent/dbase"
 	"nyarrent/logger"
 	"nyarrent/pages"
@@ -25,16 +26,16 @@ func (h Hello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    var port = "3000";
+    config.InitConfig()
 
     dbase.Connect()
     setup_routes()
 
     args := os.Args[1:]
     if 0 < len(args) {
-        port = args[0];
+        config.Config.Http.Port = args[0];
     }
 
-    err := http.ListenAndServe(strings.Join([]string{":", port}, ""), nil)
+    err := http.ListenAndServe(strings.Join([]string{":", config.Config.Http.Port}, ""), nil)
     msg.Println(err)
 }

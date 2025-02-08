@@ -2,9 +2,8 @@ package dbase
 
 import (
 	"context"
-	"errors"
+	"nyarrent/config"
 	"nyarrent/logger"
-	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,8 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var mongoDBuri = os.Getenv("NYARRENT_URI")
-var mongoDBdatabase = os.Getenv("NYARRENT_DATABASE_NAME")
 var mongo_client *mongo.Client
 var db *mongo.Database
 
@@ -29,37 +26,19 @@ var log = logger.Logger {
 // =====================================================================================================================
 // Basic connect and stuff
 
-func check_envs(envs ...string) error {
-    for i, e := range envs {
-        // FIXME: Remove logs after secrets put in place and debug mode is off
-        log.Printf("%02d: Loading DB env: %s=%s\n", i + 1, e, os.Getenv(e))
-        if "" == os.Getenv(e) {
-            msg := "Environmental variable does not exists: " + e
-            log.Println(msg)
-            return errors.New(msg)
-        }
-    }
-
-    return nil
-}
-
 func Connect() error {
     var err error
-    err = check_envs("NYARRENT_URI", "NYARRENT_DATABASE_NAME")
-    if nil != err {
-        return err
-    }
 
     // Use the SetServerAPIOptions() method to set the Stable API version to 1
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI(mongoDBuri).SetServerAPIOptions(serverAPI)
+	opts := options.Client().ApplyURI(config.Config.Dbase.Url).SetServerAPIOptions(serverAPI)
 
     // Create a new client and connect to the server
     mongo_client, err = mongo.Connect(context.TODO(), opts)
 	if err != nil {
         return err
 	}
-    db = mongo_client.Database(mongoDBdatabase)
+    db = mongo_client.Database(config.Config.Dbase.Name)
 
 	// Send a ping to confirm a successful connection
 	var result bson.M

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"nyarrent/config"
 	"nyarrent/dbase"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -77,16 +77,13 @@ func dlDelete(dl dbase.AnimeDownload) error { return nil }
 // =====================================================================================================================
 // Anime related internal downloads logic...
 
-var AS_API_URL = "https://animeschedule.net/api/v3"
-var AS_API_KEY = os.Getenv("AS_API_KEY")
-
 func aSHttpGet(query string) (*http.Response, error) {
-    req, err := http.NewRequest("GET", AS_API_URL + query, nil)
+    req, err := http.NewRequest("GET", config.Config.AnimeAPI.ApiUrl + query, nil)
     if nil != err {
         return nil, err
     }
-    if "" != AS_API_KEY {
-        req.Header.Add("Authorization", "Bearer " + AS_API_KEY)
+    if "" != config.Config.AnimeAPI.ApiKey {
+        req.Header.Add("Authorization", "Bearer " + config.Config.AnimeAPI.ApiKey)
     }
     client := http.Client{}
     return client.Do(req)

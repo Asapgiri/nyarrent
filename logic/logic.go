@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"math"
 	"net/http"
+	"nyarrent/config"
 	"nyarrent/dbase"
 	"nyarrent/logger"
 	"os"
@@ -18,9 +19,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const downloadDisk = "/mnt/d"
-const downloadFolder = "/mnt/d/Download"
-const downloadUrl = "downloads"
 var zipMap = []string{}
 
 var log = logger.Logger {
@@ -120,7 +118,8 @@ func getFileInfo(path string) (fs.FileInfo, error) {
 }
 
 func GetTorrentFile(title string, publicPath bool) string {
-    path := strings.Join([]string{downloadFolder, title}, "/")
+    dlpath := strings.Join([]string{config.Config.Downloads.Disk, config.Config.Downloads.Folder}, "/")
+    path := strings.Join([]string{dlpath, title}, "/")
 
     fileInfo, err := getFileInfo(path)
     if nil != err {
@@ -139,7 +138,7 @@ func GetTorrentFile(title string, publicPath bool) string {
     }
 
     if publicPath {
-        file = "/" + strings.Replace(file, downloadFolder, downloadUrl, 1)
+        file = "/" + strings.Replace(file, dlpath, "downloads", 1)
     }
 
     return file
@@ -256,7 +255,7 @@ func GetTorrents() []Torrent {
 }
 
 func GetDiskUsage() DiskUsage {
-    stdout, err := exec.Command("df", "-H", downloadDisk).Output()
+    stdout, err := exec.Command("df", "-H", config.Config.Downloads.Disk).Output()
     if nil != err {
         log.Println(err.Error())
         return DiskUsage{}
