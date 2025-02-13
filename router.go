@@ -23,4 +23,6 @@ func setup_routes() {
     http.HandleFunc("GET /addepisode",          pages.AddEpisode)
     http.HandleFunc("GET /delepisode",          pages.DelEpisode)
     http.HandleFunc("GET /refreshnyaa/{route}/{index}", pages.RefreshNyaa)
+
+    http.HandleFunc("GET /api/gettorrent/{hash}",   pages.ApiGetTorrentJson)
 }

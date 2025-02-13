@@ -26,3 +26,24 @@ function getCookie(cname) {
 if ("" == getCookie("formathash")) {
     document.cookie = "formathash="+createRandomString(32);
 }
+
+function refreshTorrent(hash) {
+    fetch('/api/gettorrent/' + hash)
+        .then(resp => resp.json())
+        .then(json => {
+            if ('success' == json.result) {
+                torrent = json.arguments.torrents[0];
+                percent = (torrent.haveValid / torrent.sizeWhenDone) * 100;
+
+                pbars = document.getElementsByClassName('progress-'+hash)
+                for (let i = 0; i < pbars.length; i++) {
+                    pbars[i].style.width = percent+'%';
+                    pbars[i].innerText = percent+'%';
+                }
+
+                if (percent < 100) {
+                    setTimeout(() => {refreshTorrent(hash)}, 1000)
+                }
+            }
+        })
+}

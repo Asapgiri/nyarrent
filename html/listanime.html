@@ -122,7 +122,7 @@
                         {{if .Torrents}}
                         {{$cellP := index .Torrents 0}}
                         <div class="progress" style="height: 100%">
-                            <div class="progress-bar bg-{{$cellP.Progress.Color}}" role="progressbar"
+                            <div class="progress-refresh progress-{{$cellP.Torrent.Hash}} progress-bar bg-{{$cellP.Progress.Color}}" role="progressbar"
                                 style="width: {{$cellP.Progress.Percentage}}%;" aria-valuenow="{{$cellP.Progress.Percentage}}"
                                 aria-valuemin="0" aria-valuemax="100">{{$cellP.Progress.Percentage}}%</div>
                         </div>
@@ -149,9 +149,10 @@
                 <div class="m-2 pb-1 border-bottom overflow-auto small row">
                     <div class="col-md-2">
                         <div class="progress" style="height: 100%">
-                            <div class="progress-bar bg-{{.Progress.Color}}" role="progressbar"
+                            <div class="progress-refresh progress-{{.Torrent.Hash}} progress-bar bg-{{.Progress.Color}}" role="progressbar"
                                 style="width: {{.Progress.Percentage}}%;" aria-valuenow="{{.Progress.Percentage}}"
                                 aria-valuemin="0" aria-valuemax="100">{{.Progress.Percentage}}%</div>
+                            <script>refreshTorrent('{{.Torrent.Hash}}')</script>
                         </div>
                     </div>
                     <div class="col-md-8">

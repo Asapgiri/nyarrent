@@ -54,9 +54,10 @@
                             {{.Id}}
                         </div>
                         <div class="progress" style="height: 100%">
-                            <div class="progress-bar bg-{{.Progress.Color}}" role="progressbar"
+                            <div class="progress-refresh progress-{{.FullInfo.HashString}} progress-bar bg-{{.Progress.Color}}" role="progressbar"
                                 style="width: {{.Progress.Percentage}}%;" aria-valuenow="{{.Progress.Percentage}}"
                                 aria-valuemin="0" aria-valuemax="100">{{.Progress.Percentage}}%</div>
+                            <script>refreshTorrent('{{.FullInfo.HashString}}')</script>
                         </div>
                     </div>
                     <div class="col-md-1">{{.Size}}</div>
