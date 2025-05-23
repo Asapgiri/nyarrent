@@ -224,8 +224,8 @@ func getTorrentDatesReadable(info TorrentInfo) TorrentDatesReadable {
     }
 }
 
-func GetTorrents() []Torrent {
-    cmd := exec.Command("transmission-remote", "--list")
+func GetTorrents(filter *TorrentsFilter) []Torrent {
+    cmd := exec.Command("transmission-remote", "-j", "--list")
 
     stdout, err := cmd.Output()
     if nil != err {
@@ -233,37 +233,54 @@ func GetTorrents() []Torrent {
         return []Torrent{}
     }
 
-    lines := strings.Split(string(stdout), "\n")
+	list := TorrentList{}
+	err = json.Unmarshal(stdout, &list)
+	if nil != err {
+		log.Println(err.Error())
+	}
+	slices.Reverse(list.Arguments.Torrents)
+
+	pageCount := len(list.Arguments.Torrents) / filter.EpisodesPerPage
+	if 0 != len(list.Arguments.Torrents) % filter.EpisodesPerPage {
+		pageCount++
+	}
+	filter.PageCounter = make([]PageCounter, pageCount)
+	for i := 0; i < pageCount; i++ {
+		filter.PageCounter[i].Index = i + 1
+		filter.PageCounter[i].Value = i
+		filter.PageCounter[i].Selected = i == filter.Page
+	}
+
     torrents := []Torrent{}
 
+	start := filter.Page * filter.EpisodesPerPage
+	end := start + filter.EpisodesPerPage
+
+	if end > len(list.Arguments.Torrents) {
+		end = len(list.Arguments.Torrents)
+	}
+
     log.Println("start range ===============================================")
-    for i, line := range lines {
-        // Trim ID and trailing rows
-        if 0 < i && len(lines) > i + 2 {
-            fields := strings.Fields(line)
+	for _, t := range list.Arguments.Torrents[start:end] {
+        percent := float64(t.SizeWhenDone - t.LeftUntilDone) / float64(t.SizeWhenDone)
 
-            percent, _ := strconv.ParseFloat(strings.Trim(fields[1], "%"), 64)
-
-            newTorrent := Torrent{
-                Id:         fields[0],
-                Title:      strings.Join(fields[9:], " "),
-                Size:       strings.Join(fields[2:4], " "),
-                Eta:        fields[4],
-                Status:     fields[8],
-                Progress:   GenerateProgress(percent / 100),
-            }
-            newTorrent.Url = GetTorrentFile(newTorrent.Title, true)
-
-            newTorrent.Info = getTorrentInfoString(newTorrent.Id, false)
-            newTorrent.FullInfo = getTorrentInfo(newTorrent.Id)
-            newTorrent.Dates = getTorrentDatesReadable(newTorrent.FullInfo)
-
-            torrents = append(torrents, newTorrent)
+        newTorrent := Torrent{
+            Id:         strconv.Itoa(t.Id),
+            Title:      t.Name,
+            Size:       strconv.Itoa(t.SizeWhenDone),
+            Eta:        strconv.Itoa(t.Eta),
+            Status:     strconv.Itoa(t.Status),
+            Progress:   GenerateProgress(percent),
         }
+        newTorrent.Url = GetTorrentFile(newTorrent.Title, true)
+
+        newTorrent.Info = getTorrentInfoString(newTorrent.Id, false)
+        newTorrent.FullInfo = getTorrentInfo(newTorrent.Id)
+        newTorrent.Dates = getTorrentDatesReadable(newTorrent.FullInfo)
+
+        torrents = append(torrents, newTorrent)
     }
     log.Println("end range =================================================")
-
-    slices.Reverse(torrents)
 
     return torrents
 }

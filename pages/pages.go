@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"nyarrent/logger"
 	"nyarrent/logic"
+	"strconv"
 )
 
 var log = logger.Logger {
@@ -51,9 +52,27 @@ func SearchNewAnimes(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListAllTorrents(w http.ResponseWriter, r *http.Request) {
+    filter := getMap(r)
+
+    page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
+    if nil == err {
+        filter.Torrents.Page = int(page)
+    } else {
+        filter.Torrents.Page = defaultFilter.Torrents.Page
+	}
+    eps, err := strconv.ParseInt(r.URL.Query().Get("episodesperpage"), 10, 64)
+    if nil == err {
+        filter.Torrents.EpisodesPerPage = int(eps)
+    } else {
+		filter.Torrents.EpisodesPerPage = defaultFilter.Torrents.EpisodesPerPage
+	}
+
+    refreshMap(&filter, r, "page", "episodesperpage")
+
     tl := logic.DtoBase {
-        TorrentList: logic.GetTorrents(),
+        TorrentList: logic.GetTorrents(&filter.Torrents),
         DiskUsage: logic.GetDiskUsage(),
+		Filter: filter.Torrents,
     }
 
     fil, _ := read_artifact("listall.html", w.Header())

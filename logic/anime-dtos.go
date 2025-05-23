@@ -66,6 +66,19 @@ type EpisodeFilter struct {
     Hash    string
 }
 
+type PageCounter struct {
+	Index		int
+	Value		int
+	Selected 	bool
+}
+
+type TorrentsFilter struct {
+	Page            int
+	EpisodesPerPage int
+	PageCounter     []PageCounter
+    Hash            string
+}
+
 type Anime struct {
     Anime       dbase.Anime
     Episodes    []Episodes

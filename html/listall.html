@@ -13,6 +13,42 @@
             </form>
         </h6>
         <p><input class="" type="text" id="searchbar" onkeyup="searchFunction()" placeholder="Search.."></p>
+
+        <div class="card-group mb-1">
+            <div class="card">
+                <div class="card-body py-1">
+                    <h5 class="card-title mb-0">
+                        Filter
+                    </h5>
+                </div>
+                <div class="card-footer">
+                    <form method="GET">
+                        <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                            <div class="btn-group me-2" role="group" aria-label="First group">
+                                <button type="button" class="btn btn-secondary">◀</button>
+                            </div>
+                            <div class="btn-group me-2" role="group" aria-label="Second group">
+                                {{range .Filter.PageCounter}}
+                                <button type="submit" name="page" id="page" value="{{.Value}}" class="btn btn-secondary"{{if .Selected}} disabled{{end}}>{{.Index}}</button>
+                                {{end}}
+                            </div>
+                            <div class="btn-group me-2" role="group" aria-label="Third group">
+                                <button type="button" class="btn btn-secondary">▶</button>
+                            </div>
+                            <div class="btn-group" role="group" aria-label="Third group">
+                                <select class="form-select" name="episodesperpage" id="episodesperpage" onChange="this.form.submit()">
+                                    <option value="25"  {{if eq .Filter.EpisodesPerPage 25}}selected{{end}}>25</option>
+                                    <option value="50"  {{if eq .Filter.EpisodesPerPage 50}}selected{{end}}>50</option>
+                                    <option value="100" {{if eq .Filter.EpisodesPerPage 100}}selected{{end}}>100</option>
+                                    <option value="500" {{if eq .Filter.EpisodesPerPage 500}}selected{{end}}>500</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <ul class="list-group list-group-flush" id="table">
 
             <li class="list-group-item list-group-item-action p-2">
