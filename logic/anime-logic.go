@@ -105,7 +105,9 @@ func sJsonHttpUnmarshall(object interface{}, query string) error {
 
     err = json.Unmarshal(objectJsonBarr, &object)
     if nil != err {
+        log.Println(query)
         log.Println(resp)
+        log.Println(string(objectJsonBarr))
         log.Println(err.Error())
         return err
     }
@@ -282,7 +284,7 @@ func ListAnime(route string, filter *EpisodeFilter) Anime {
         }
         if 0 == len(episodes[i].Torrents) {
             //log.Printf("Getting nyaa for episode %s - ep%d\n", dbAnime.Title, idx)
-            episodes[i].NyaaText, episodes[i].Nyaa = GetNyaaList(dbAnime.Title, idx, filter.Nyaa)
+            episodes[i].NyaaText, episodes[i].Tosho = GetNyaaList(dbAnime.Title, idx, filter.Nyaa)
         }
     }
 

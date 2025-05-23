@@ -37,6 +37,7 @@ type DiskUsage struct {
 type DtoBase struct {
     TorrentList []Torrent
     DiskUsage   DiskUsage
+	Filter      TorrentsFilter
 }
 
 // Transfer related stuff
@@ -94,6 +95,34 @@ type TorrentInfo struct {
     UploadedEver        int         `json:uploadedEver`
     Webseeds            []string    `json:webseeds`
     WebseedsSendingToUs int         `json:webseedsSendingToUs`
+}
+
+type TorrentArg struct {
+	AddedDate           int         `json:addedDate`
+    Error               int         `json:error`
+    ErrorString         string      `json:errorString`
+    Eta                 int         `json:eta`
+    Id                  int         `json:id`
+    IsFinished          bool        `json:isFinished`
+    LeftUntilDone       int         `json:leftUntilDone`
+    Name                string      `json:name`
+    PeersGettingFromUs  int         `json:peersGettingFromUs`
+    PeersSendingToUs    int         `json:peersSendingToUs`
+    RateDownload        int         `json:rateDownload`
+    RateUpload          int         `json:rateUpload`
+    SizeWhenDone        int         `json:sizeWhenDone`
+    Status              int         `json:status`
+    UploadRatio         float64     `json:uploadRatio`
+}
+
+type TorrentArgs struct {
+    Torrents            []TorrentArg`json:torrents`
+}
+
+type TorrentList struct {
+	Arguments           TorrentArgs `json:arguments`
+	Result              string      `json:result`
+	Tag                 int         `json:tag`
 }
 
 type TrArguments struct {

@@ -8,6 +8,7 @@ import (
 type Filters struct {
     AnimeTimetable  logic.AnimeTimetableFilter
     Episode         logic.EpisodeFilter
+	Torrents        logic.TorrentsFilter
     Hash            string
 }
 
@@ -30,6 +31,10 @@ var defaultFilter = Filters{
             ForseRefrsh:    false,
         },
     },
+	Torrents: logic.TorrentsFilter{
+		Page: 0,
+		EpisodesPerPage: 25,
+	},
 }
 
 func getMap(r *http.Request) Filters {

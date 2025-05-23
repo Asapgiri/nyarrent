@@ -224,8 +224,8 @@ func getTorrentDatesReadable(info TorrentInfo) TorrentDatesReadable {
     }
 }
 
-func GetTorrents() []Torrent {
-    cmd := exec.Command("transmission-remote", "--list")
+func GetTorrents(filter *TorrentsFilter) []Torrent {
+    cmd := exec.Command("transmission-remote", "-j", "--list")
 
     stdout, err := cmd.Output()
     if nil != err {
@@ -233,37 +233,54 @@ func GetTorrents() []Torrent {
         return []Torrent{}
     }
 
-    lines := strings.Split(string(stdout), "\n")
+	list := TorrentList{}
+	err = json.Unmarshal(stdout, &list)
+	if nil != err {
+		log.Println(err.Error())
+	}
+	slices.Reverse(list.Arguments.Torrents)
+
+	pageCount := len(list.Arguments.Torrents) / filter.EpisodesPerPage
+	if 0 != len(list.Arguments.Torrents) % filter.EpisodesPerPage {
+		pageCount++
+	}
+	filter.PageCounter = make([]PageCounter, pageCount)
+	for i := 0; i < pageCount; i++ {
+		filter.PageCounter[i].Index = i + 1
+		filter.PageCounter[i].Value = i
+		filter.PageCounter[i].Selected = i == filter.Page
+	}
+
     torrents := []Torrent{}
 
+	start := filter.Page * filter.EpisodesPerPage
+	end := start + filter.EpisodesPerPage
+
+	if end > len(list.Arguments.Torrents) {
+		end = len(list.Arguments.Torrents)
+	}
+
     log.Println("start range ===============================================")
-    for i, line := range lines {
-        // Trim ID and trailing rows
-        if 0 < i && len(lines) > i + 2 {
-            fields := strings.Fields(line)
+	for _, t := range list.Arguments.Torrents[start:end] {
+        percent := float64(t.SizeWhenDone - t.LeftUntilDone) / float64(t.SizeWhenDone)
 
-            percent, _ := strconv.ParseFloat(strings.Trim(fields[1], "%"), 64)
-
-            newTorrent := Torrent{
-                Id:         fields[0],
-                Title:      strings.Join(fields[9:], " "),
-                Size:       strings.Join(fields[2:4], " "),
-                Eta:        fields[4],
-                Status:     fields[8],
-                Progress:   GenerateProgress(percent / 100),
-            }
-            newTorrent.Url = GetTorrentFile(newTorrent.Title, true)
-
-            newTorrent.Info = getTorrentInfoString(newTorrent.Id, false)
-            newTorrent.FullInfo = getTorrentInfo(newTorrent.Id)
-            newTorrent.Dates = getTorrentDatesReadable(newTorrent.FullInfo)
-
-            torrents = append(torrents, newTorrent)
+        newTorrent := Torrent{
+            Id:         strconv.Itoa(t.Id),
+            Title:      t.Name,
+            Size:       strconv.Itoa(t.SizeWhenDone),
+            Eta:        strconv.Itoa(t.Eta),
+            Status:     strconv.Itoa(t.Status),
+            Progress:   GenerateProgress(percent),
         }
+        newTorrent.Url = GetTorrentFile(newTorrent.Title, true)
+
+        newTorrent.Info = getTorrentInfoString(newTorrent.Id, false)
+        newTorrent.FullInfo = getTorrentInfo(newTorrent.Id)
+        newTorrent.Dates = getTorrentDatesReadable(newTorrent.FullInfo)
+
+        torrents = append(torrents, newTorrent)
     }
     log.Println("end range =================================================")
-
-    slices.Reverse(torrents)
 
     return torrents
 }
@@ -347,7 +364,7 @@ func DelTorrent(id string) (string, string, error) {
 
 // Nyaa.si related
 
-func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.NyaaData) {
+func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.AnimeShotoTorrent) {
     var q string
     nameLen, err := strconv.ParseInt(filter.NameParams, 10, 64)
     if nil != err {
@@ -356,24 +373,27 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
     if len(strings.Split(title, " ")) > int(nameLen) {
         q = strings.Join(strings.Split(title, " ")[:nameLen], "+")
     } else {
-        q = strings.Replace(title, " ", "+", 0)
+        q = strings.ReplaceAll(title, " ", "+")
+    }
+
+    episodeStr := strconv.FormatInt(int64(episode), 10)
+    if len(episodeStr) <= 1 {
+        episodeStr = "0" + episodeStr
     }
 
     q = strings.Join([]string{
         filter.Group,
         q,
-        strconv.FormatInt(int64(episode), 10),
+        episodeStr,
         filter.Resolution,
     }, "+")
-    nyaaJson := dbase.NyaaJson{}
+    shoto := []dbase.AnimeShotoTorrent{}
 
     if "" == filter.Category {
         filter.Category = "anime"
     }
     query := []string{
-        "q=",               q,
-        "&category=",       filter.Category,
-        "&sub_category=",   filter.SubCategory,
+        "q=", q,
     }
     queryStr := strings.Join(query, "")
 
@@ -381,28 +401,30 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
     nyaacache.Select(title, episode)
     if "" == nyaacache.Title || filter.ForseRefrsh {
         log.Println("Getting episode for: " + q)
-        resp, err := http.Get("https://nyaaapi.onrender.com/nyaa?"+queryStr)
+        //resp, err := http.Get("https://nyaaapi.onrender.com/nyaa?"+queryStr)
+        resp, err := http.Get("https://feed.animetosho.org/json?"+queryStr)
         if nil != err {
             log.Println(err.Error())
-            return queryStr, []dbase.NyaaData{}
+            return queryStr, []dbase.AnimeShotoTorrent{}
         }
         defer resp.Body.Close()
 
         aniListJsonBarr, err := io.ReadAll(resp.Body)
         if nil != err {
             log.Println(err.Error())
-            return queryStr, []dbase.NyaaData{}
+            return queryStr, []dbase.AnimeShotoTorrent{}
         }
 
-        err = json.Unmarshal(aniListJsonBarr, &nyaaJson)
+        err = json.Unmarshal(aniListJsonBarr, &shoto)
         if nil != err {
             log.Println(err.Error())
-            return queryStr, []dbase.NyaaData{}
+            return queryStr, []dbase.AnimeShotoTorrent{}
         }
 
         nyaacache.Episode = episode
         nyaacache.Title = title
-        nyaacache.Nyaa = nyaaJson
+        //nyaacache.Nyaa = nyaaJson
+        nyaacache.Shoto = shoto
         if nyaacache.Id.IsZero() {
             nyaacache.Id = primitive.NewObjectID()
             nyaacache.Add()
@@ -411,14 +433,15 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
         }
     } else {
         //log.Println("Episodes exists for: " + q)
-        nyaaJson = nyaacache.Nyaa
+        //nyaaJson = nyaacache.Nyaa
+        shoto = nyaacache.Shoto
     }
 
     resultCount, err := strconv.ParseInt(filter.ResultCount, 10, 64)
-    if nil == err && len(nyaaJson.Data) >= int(resultCount) {
-        return queryStr, nyaaJson.Data[:resultCount]
+    if nil == err && len(shoto) >= int(resultCount) {
+        return queryStr, shoto[:resultCount]
     } else {
-        return queryStr, nyaaJson.Data
+        return queryStr, shoto
     }
 
 }

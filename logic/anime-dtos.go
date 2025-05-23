@@ -46,6 +46,7 @@ type Episodes struct {
     Title       string
     Torrents    []EpisodeTorrent
     Nyaa        []dbase.NyaaData
+	Tosho		[]dbase.AnimeShotoTorrent
     NyaaText    string
 }
 
@@ -64,6 +65,19 @@ type NyaaFilter struct {
 type EpisodeFilter struct {
     Nyaa    NyaaFilter
     Hash    string
+}
+
+type PageCounter struct {
+	Index		int
+	Value		int
+	Selected 	bool
+}
+
+type TorrentsFilter struct {
+	Page            int
+	EpisodesPerPage int
+	PageCounter     []PageCounter
+    Hash            string
 }
 
 type Anime struct {
