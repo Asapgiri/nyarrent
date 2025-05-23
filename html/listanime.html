@@ -11,6 +11,9 @@
                     <strong><a href="/listanime/{{.Anime.Route}}">{{.Anime.Title}}</a></strong>
                 </h1>
                 <h5>
+                    English: {{.Anime.FullInfo.Names.English}}
+                </h5>
+                <h5>
                     <a href="https://animeschedule.net/anime/{{.Anime.Route}}" target="_blank">View on AnimeSchedule</a>
                 </h5>
 
@@ -173,6 +176,16 @@
                         </form>
                     </div>
                 </div>
+                <div class="m-2 pb-1 border-bottom overflow-auto small row">
+		    <!--
+                    <embed type="video/divx" src ="{{.Url}}" autoPlay=\"false\" pluginspage=\"http://go.divx.com/plugin/download/\" style="width: 100%;"></embed>
+		    -->
+                    <video controls preload="metadata" style="width: 600px;">
+                         <source src="{{.Url}}" type="video/mp4">
+			 <track label="language one" kind="subtitles" srclang="en" src="{{.Url}}">
+                         Browser does not support video tag...
+                    </video>
+                </div>
                 {{end}}
                 {{else}}
                 <div class="m-2 mb-3 overflow-auto small row">
@@ -180,7 +193,10 @@
                         Nothing Downloaded for episode
                     </div>
                     <div class="col-md-6">
-                        Search string: {{.NyaaText}}
+			Search string: 
+			<a href="https://nyaa.si/?f=0&{{if eq $.Filter.Nyaa.SubCategory "eng"}}c=1_2{{else if eq $.Filter.Nyaa.SubCategory "raw"}}c=1_4{{else}}c=0_0{{end}}&{{.NyaaText}}" target="_blank">
+                            {{.NyaaText}}
+			</a>
                     </div>
                     <div class="col-md-4">
                         <a class="btn btn-warning py-0" href="/refreshnyaa/{{$.Anime.Route}}/{{$id}}?hash={{$.Filter.Hash}}">Refresh nyaa list</a>

@@ -80,6 +80,7 @@ func Download(w http.ResponseWriter, r *http.Request) {
     log.Printf("title: %s\n", title)
     log.Printf("file:  %s\n", file)
 
+    //w.Header().Add("Content-Type", "video/mp4")
     http.ServeFile(w, r, file)
 }
 

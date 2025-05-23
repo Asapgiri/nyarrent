@@ -1,0 +1,15 @@
+[Unit]
+Description=Nyarrent Web Anime and Torrent server
+After=mongod.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=radxa
+WorkingDirectory=/repo/nyarrent
+ExecStart=/repo/nyarrent/nyarrent
+
+[Install]
+WantedBy=multi-user.target

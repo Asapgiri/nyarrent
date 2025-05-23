@@ -58,7 +58,7 @@ type TorrentInfo struct {
     Error               int         `json:error`
     ErrorString         string      `json:errorString`
     Eta                 int         `json:eta`
-    Group               string      `json:group`
+    Group               int         `json:group`
     HashString          string      `json:hashString`
     HaveUnchecked       int         `json:haveUnchecked`
     HaveValid           int         `json:haveValid`
@@ -84,7 +84,7 @@ type TorrentInfo struct {
     SeedRatioLimit      int         `json:seedRatioLimit`
     SeedRatioMode       int         `json:seedRatioMode`
     SizeWhenDone        int         `json:sizeWhenDone`
-    Source              string      `json:source`
+    Source              int         `json:source`
     StartDate           int         `json:startDate`
     Status              int         `json:status`
     TotalSize           int         `json:totalSize`

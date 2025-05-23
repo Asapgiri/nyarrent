@@ -99,7 +99,7 @@
                         {{.Anime.Status}}
                     </h5>
                     <p class="card-text" style="max-height: 72px; overflow: hidden;">
-                        <strong><a href="{{if .Added}}/listanime/{{else}}https://animeschedule.net/anime/{{end}}{{.Anime.Route}}" {{if not .Added}}target="_blank"{{end}} alt="{{.Anime.Title}}" title="{{.Anime.Title}}">{{.Anime.Title}}</a></strong>
+		    <strong><a href="{{if .Added}}/listanime/{{else}}https://animeschedule.net/anime/{{end}}{{.Anime.Route}}" {{if not .Added}}target="_blank"{{end}} alt="{{.Anime.Title}}" title="{{.Anime.Title}}">{{if .Anime.English}}{{.Anime.English}}{{else}}{{.Anime.Title}}{{end}}</a></strong>
                     </p>
                 </div>
                 <div class="card-footer text-center p-0">

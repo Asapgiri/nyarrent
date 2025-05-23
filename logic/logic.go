@@ -60,6 +60,9 @@ func removeElement(slice []string, index int) []string {
 func zipIt(path string) string {
     zipName := strings.Join([]string{path, "zip"}, ".")
     _, err := getFileInfo(zipName)
+
+    log.Println("start zip-it ===============================================")
+    log.Println(zipName)
     if nil != err {
         if slices.Contains(zipMap, zipName) {
             return "In progress..."
@@ -75,6 +78,7 @@ func zipIt(path string) string {
         index := slices.Index(zipMap, zipName)
         zipMap = removeElement(zipMap, index)
     }
+    log.Println("end zip-it =================================================")
 
     return zipName
 }
@@ -117,9 +121,17 @@ func getFileInfo(path string) (fs.FileInfo, error) {
     return fileInfo, nil
 }
 
+func removeDoubleSlash(path string) string {
+    retPath := path
+    for strings.Contains(retPath, "//") {
+        retPath = strings.Replace(retPath, "//", "/", -1)
+    }
+    return retPath
+}
+
 func GetTorrentFile(title string, publicPath bool) string {
-    dlpath := strings.Join([]string{config.Config.Downloads.Disk, config.Config.Downloads.Folder}, "/")
-    path := strings.Join([]string{dlpath, title}, "/")
+    dlpath := removeDoubleSlash(strings.Join([]string{config.Config.Downloads.Disk, config.Config.Downloads.Folder}, "/"))
+    path := removeDoubleSlash(strings.Join([]string{dlpath, title}, "/"))
 
     fileInfo, err := getFileInfo(path)
     if nil != err {
@@ -224,6 +236,7 @@ func GetTorrents() []Torrent {
     lines := strings.Split(string(stdout), "\n")
     torrents := []Torrent{}
 
+    log.Println("start range ===============================================")
     for i, line := range lines {
         // Trim ID and trailing rows
         if 0 < i && len(lines) > i + 2 {
@@ -248,6 +261,7 @@ func GetTorrents() []Torrent {
             torrents = append(torrents, newTorrent)
         }
     }
+    log.Println("end range =================================================")
 
     slices.Reverse(torrents)
 
