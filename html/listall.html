@@ -114,7 +114,7 @@
             <li class="list-group-item border-dark list-group-item-action p-0 bg-light collapse" id="collapse-{{.Id}}">
                 <div class="m-2 overflow-auto small row" id="torrent-{{.Id}}">
                     <div class="col-md-12">
-                        {{if eq .Eta "Done"}}
+                        {{if eq .Eta "-1"}}
                         <strong>
                             <a href="{{.Url}}">
                                 <button class="btn btn-primary" type="button">Download: {{.Title}}</button>

@@ -67,8 +67,6 @@ func ListAllTorrents(w http.ResponseWriter, r *http.Request) {
 		filter.Torrents.EpisodesPerPage = defaultFilter.Torrents.EpisodesPerPage
 	}
 
-    refreshMap(&filter, r, "page", "episodesperpage")
-
     tl := logic.DtoBase {
         TorrentList: logic.GetTorrents(&filter.Torrents),
         DiskUsage: logic.GetDiskUsage(),

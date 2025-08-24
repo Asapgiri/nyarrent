@@ -105,7 +105,9 @@ func sJsonHttpUnmarshall(object interface{}, query string) error {
 
     err = json.Unmarshal(objectJsonBarr, &object)
     if nil != err {
+        log.Println(query)
         log.Println(resp)
+        log.Println(string(objectJsonBarr))
         log.Println(err.Error())
         return err
     }
