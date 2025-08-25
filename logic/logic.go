@@ -373,13 +373,18 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
     if len(strings.Split(title, " ")) > int(nameLen) {
         q = strings.Join(strings.Split(title, " ")[:nameLen], "+")
     } else {
-        q = strings.Replace(title, " ", "+", 0)
+        q = strings.ReplaceAll(title, " ", "+")
+    }
+
+    episodeStr := strconv.FormatInt(int64(episode), 10),
+    if len(episodeStr) <= 1 {
+        episodeStr = "0" + episodeStr
     }
 
     q = strings.Join([]string{
         filter.Group,
         q,
-        strconv.FormatInt(int64(episode), 10),
+        episodeStr,
         filter.Resolution,
     }, "+")
     shoto := []dbase.AnimeShotoTorrent{}
@@ -388,7 +393,7 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
         filter.Category = "anime"
     }
     query := []string{
-        "q=", strings.ReplaceAll(q, " ", "+"),
+        "q=", q,
     }
     queryStr := strings.Join(query, "")
 
@@ -419,7 +424,7 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
         nyaacache.Episode = episode
         nyaacache.Title = title
         //nyaacache.Nyaa = nyaaJson
-		nyaacache.Shoto = shoto
+        nyaacache.Shoto = shoto
         if nyaacache.Id.IsZero() {
             nyaacache.Id = primitive.NewObjectID()
             nyaacache.Add()
@@ -429,7 +434,7 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
     } else {
         //log.Println("Episodes exists for: " + q)
         //nyaaJson = nyaacache.Nyaa
-		shoto = nyaacache.Shoto
+        shoto = nyaacache.Shoto
     }
 
     resultCount, err := strconv.ParseInt(filter.ResultCount, 10, 64)
