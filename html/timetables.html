@@ -26,14 +26,14 @@
 
         {{$date := (index (index .AnimeWeek 0) 0).Anime.EpisodeDate}}
         <div class="card-group">
-            <div class="card" style="width: 13rem; margin: 3px; float: left;">
+            <div class="card" style="width: 13rem; max-width: calc(50% - 6px); margin: 3px; float: left;">
                 <div class="card-body">
                     <h5 class="card-title">
                         {{$date.Format "01.02"}} - Monday
                     </h5>
                 </div>
             </div>
-            <div class="card" style="width: 13rem; margin: 3px; float: left;">
+            <div class="card" style="width: 13rem; max-width: calc(50% - 6px); margin: 3px; float: left;">
                 <div class="card-body">
                     <h5 class="card-title">
                         {{$date = $date.Add day}}
@@ -41,7 +41,7 @@
                     </h5>
                 </div>
             </div>
-            <div class="card" style="width: 13rem; margin: 3px; float: left;">
+            <div class="card" style="width: 13rem; max-width: calc(50% - 6px); margin: 3px; float: left;">
                 <div class="card-body">
                     <h5 class="card-title">
                         {{$date = $date.Add day}}
@@ -49,7 +49,7 @@
                     </h5>
                 </div>
             </div>
-            <div class="card" style="width: 13rem; margin: 3px; float: left;">
+            <div class="card" style="width: 13rem; max-width: calc(50% - 6px); margin: 3px; float: left;">
                 <div class="card-body">
                     <h5 class="card-title">
                         {{$date = $date.Add day}}
@@ -57,7 +57,7 @@
                     </h5>
                 </div>
             </div>
-            <div class="card" style="width: 13rem; margin: 3px; float: left;">
+            <div class="card" style="width: 13rem; max-width: calc(50% - 6px); margin: 3px; float: left;">
                 <div class="card-body">
                     <h5 class="card-title">
                         {{$date = $date.Add day}}
@@ -65,7 +65,7 @@
                     </h5>
                 </div>
             </div>
-            <div class="card" style="width: 13rem; margin: 3px; float: left;">
+            <div class="card" style="width: 13rem; max-width: calc(50% - 6px); margin: 3px; float: left;">
                 <div class="card-body">
                     <h5 class="card-title">
                         {{$date = $date.Add day}}
@@ -73,7 +73,7 @@
                     </h5>
                 </div>
             </div>
-            <div class="card" style="width: 13rem; margin: 3px; float: left;">
+            <div class="card" style="width: 13rem; max-width: calc(50% - 6px); margin: 3px; float: left;">
                 <div class="card-body">
                     <h5 class="card-title">
                         {{$date = $date.Add day}}
@@ -87,9 +87,9 @@
         <div class="card-group">
             {{range .}}
             {{if not .Filled}}
-            <div class="card bg-transparent border-0" style="width: 13rem; margin: 3px; float: left;">
+            <div class="card bg-transparent border-0" style="width: 13rem; max-width: calc(50% - 6px); margin: 3px; float: left;">
             {{else}}
-            <div class="card" style="{{if .Aired}}background: #ffffc5;{{else if and .Added (not $.Filter.OnlyOnList)}}background: #d3d3d3;{{end}} width: 13rem; margin: 3px; float: left;">
+            <div class="card" style="{{if .Aired}}background: #ffffc5;{{else if and .Added (not $.Filter.OnlyOnList)}}background: #d3d3d3;{{end}} width: 13rem; max-width: calc(50% - 6px); margin: 3px; float: left;">
                 <a href="{{if .Added}}/listanime/{{else}}https://animeschedule.net/anime/{{end}}{{.Anime.Route}}" {{if not .Added}}target="_blank"{{end}}>
                     <img src="https://img.animeschedule.net/production/assets/public/img/{{.Anime.ImageVersionRoute}}" class="card-img-top" alt="{{.Anime.Title}}" title="{{.Anime.Title}}" style="height: 260px; object-fit: cover;">
                 </a>

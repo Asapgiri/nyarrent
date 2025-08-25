@@ -62,7 +62,7 @@
     <div class="text-muted pt-3">
 
         {{range .Anime}}
-            <div class="card" style="width: 13rem; margin: 3px; float: left;">
+            <div class="card" style="width: 13rem; max-width: calc(50% - 6px); margin: 3px; float: left;">
                 <a href="/listanime/{{.Anime.Route}}">
                     <img src="https://img.animeschedule.net/production/assets/public/img/{{.Anime.Banner}}" class="card-img-top" alt="{{.Anime.Title}}" title="{{.Anime.Title}}" style="height: 260px; object-fit: cover;">
                 </a>
