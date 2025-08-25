@@ -376,7 +376,7 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
         q = strings.ReplaceAll(title, " ", "+")
     }
 
-    episodeStr := strconv.FormatInt(int64(episode), 10),
+    episodeStr := strconv.FormatInt(int64(episode), 10)
     if len(episodeStr) <= 1 {
         episodeStr = "0" + episodeStr
     }
