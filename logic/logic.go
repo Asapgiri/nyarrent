@@ -364,7 +364,7 @@ func DelTorrent(id string) (string, string, error) {
 
 // Nyaa.si related
 
-func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.NyaaData) {
+func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.AnimeShotoTorrent) {
     var q string
     nameLen, err := strconv.ParseInt(filter.NameParams, 10, 64)
     if nil != err {
@@ -382,15 +382,13 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
         strconv.FormatInt(int64(episode), 10),
         filter.Resolution,
     }, "+")
-    nyaaJson := dbase.NyaaJson{}
+    shoto := []dbase.AnimeShotoTorrent{}
 
     if "" == filter.Category {
         filter.Category = "anime"
     }
     query := []string{
-        "q=",               q,
-        "&category=",       filter.Category,
-        "&sub_category=",   filter.SubCategory,
+        "q=", strings.ReplaceAll(q, " ", "+"),
     }
     queryStr := strings.Join(query, "")
 
@@ -398,28 +396,30 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
     nyaacache.Select(title, episode)
     if "" == nyaacache.Title || filter.ForseRefrsh {
         log.Println("Getting episode for: " + q)
-        resp, err := http.Get("https://nyaaapi.onrender.com/nyaa?"+queryStr)
+        //resp, err := http.Get("https://nyaaapi.onrender.com/nyaa?"+queryStr)
+        resp, err := http.Get("https://feed.animetosho.org/json?"+queryStr)
         if nil != err {
             log.Println(err.Error())
-            return queryStr, []dbase.NyaaData{}
+            return queryStr, []dbase.AnimeShotoTorrent{}
         }
         defer resp.Body.Close()
 
         aniListJsonBarr, err := io.ReadAll(resp.Body)
         if nil != err {
             log.Println(err.Error())
-            return queryStr, []dbase.NyaaData{}
+            return queryStr, []dbase.AnimeShotoTorrent{}
         }
 
-        err = json.Unmarshal(aniListJsonBarr, &nyaaJson)
+        err = json.Unmarshal(aniListJsonBarr, &shoto)
         if nil != err {
             log.Println(err.Error())
-            return queryStr, []dbase.NyaaData{}
+            return queryStr, []dbase.AnimeShotoTorrent{}
         }
 
         nyaacache.Episode = episode
         nyaacache.Title = title
-        nyaacache.Nyaa = nyaaJson
+        //nyaacache.Nyaa = nyaaJson
+		nyaacache.Shoto = shoto
         if nyaacache.Id.IsZero() {
             nyaacache.Id = primitive.NewObjectID()
             nyaacache.Add()
@@ -428,14 +428,15 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
         }
     } else {
         //log.Println("Episodes exists for: " + q)
-        nyaaJson = nyaacache.Nyaa
+        //nyaaJson = nyaacache.Nyaa
+		shoto = nyaacache.Shoto
     }
 
     resultCount, err := strconv.ParseInt(filter.ResultCount, 10, 64)
-    if nil == err && len(nyaaJson.Data) >= int(resultCount) {
-        return queryStr, nyaaJson.Data[:resultCount]
+    if nil == err && len(shoto) >= int(resultCount) {
+        return queryStr, shoto[:resultCount]
     } else {
-        return queryStr, nyaaJson.Data
+        return queryStr, shoto
     }
 
 }

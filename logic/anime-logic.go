@@ -284,7 +284,7 @@ func ListAnime(route string, filter *EpisodeFilter) Anime {
         }
         if 0 == len(episodes[i].Torrents) {
             //log.Printf("Getting nyaa for episode %s - ep%d\n", dbAnime.Title, idx)
-            episodes[i].NyaaText, episodes[i].Nyaa = GetNyaaList(dbAnime.Title, idx, filter.Nyaa)
+            episodes[i].NyaaText, episodes[i].Tosho = GetNyaaList(dbAnime.Title, idx, filter.Nyaa)
         }
     }
 

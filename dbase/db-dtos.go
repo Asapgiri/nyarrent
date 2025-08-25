@@ -36,9 +36,40 @@ type NyaaCached struct {
     Episode         int
     Title           string
     Nyaa            NyaaJson
+	Shoto			[]AnimeShotoTorrent
 }
 
 // Nyaa.si stuff
+
+type AnimeShotoTorrent struct {
+    Id                          int
+    Title                       string
+    Link                        string
+    Timestamp                   int
+    Status                      string
+    Tosho_id                    any
+    Nyaa_id                     int
+    Nyaa_subdom                 any
+    Anidex_id                   any
+    Torrent_url                 string
+    Torrent_name                string
+    Info_hash                   string
+    Info_hash_v2                any
+    Magnet_uri                  string
+    Seeders                     int
+    Leechers                    int
+    Torrent_downloaded_count    int
+    Tracker_updated             int
+    Nzb_url                     string
+    Total_size                  int
+    Num_files                   int
+    Anidb_aid                   int
+    Anidb_eid                   int
+    Anidb_fid                   any
+    Article_url                 any
+    Article_title               any
+    Website_url                 any
+}
 
 type NyaaData struct {
     Category    string

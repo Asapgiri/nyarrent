@@ -46,6 +46,7 @@ type Episodes struct {
     Title       string
     Torrents    []EpisodeTorrent
     Nyaa        []dbase.NyaaData
+	Tosho		[]dbase.AnimeShotoTorrent
     NyaaText    string
 }
 
