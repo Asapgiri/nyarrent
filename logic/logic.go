@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 	"fmt"
+	"path/filepath"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -84,27 +85,27 @@ func zipIt(path string) string {
     return zipName
 }
 
-//func convertMp4(path string) string {
-//    mp4Name := strings.Join([]string{path, "mp4"}, ".")
-//    _, err := getFileInfo(mp4Name)
-//    if nil != err {
-//        if slices.Contains(zipMap, mp4Name) {
-//            return "In progress..."
-//        }
-//
-//        zipMap = append(zipMap, mp4Name)
-//        out, err := exec.Command("ffmpeg", "-i", path, "-c:v", "copy", "-map", "0", "-c:s", "mov_text", mp4Name).Output()
-//
-//        log.Println(err)
-//        log.Println(string(out))
-//        log.Println("finished!")
-//
-//        index := slices.Index(zipMap, mp4Name)
-//        zipMap = removeElement(zipMap, index)
-//    }
-//
-//    return mp4Name
-//}
+func convertMp4(path string) (string, []string) {
+    mp4Name := strings.Join([]string{path, "mp4"}, ".")
+    _, err := getFileInfo(mp4Name)
+    if nil != err {
+        if slices.Contains(zipMap, mp4Name) {
+            return "In progress...", []string{}
+        }
+
+        zipMap = append(zipMap, mp4Name)
+        out, err := exec.Command("ffmpeg", "-i", path, "-acodec", "copy", "-vcodec", "copy", mp4Name).Output()
+
+        log.Println(err)
+        log.Println(string(out))
+        log.Println("finished!")
+
+        index := slices.Index(zipMap, mp4Name)
+        zipMap = removeElement(zipMap, index)
+    }
+
+    return mp4Name, []string{}
+}
 
 func getFileInfo(path string) (fs.FileInfo, error) {
     file, err := os.Open(path)
@@ -143,9 +144,9 @@ func GetTorrentFile(title string, publicPath bool) string {
     var file string
     if fileInfo.IsDir() {
         file = zipIt(path)
-    //} else if ".mp4" != filepath.Ext(path) {
-    //    log.Println(filepath.Ext(path))
-    //    file = convertMp4(path)
+    } else if ".mp4" != filepath.Ext(path) {
+        log.Println(filepath.Ext(path))
+        file, _ = convertMp4(path)
     } else {
         file = path
     }
