@@ -62,6 +62,7 @@ type AnimeShotoTorrent struct {
     Tracker_updated             int
     Nzb_url                     string
     Total_size                  int
+    SizeStr                     string
     Num_files                   int
     Anidb_aid                   int
     Anidb_eid                   int

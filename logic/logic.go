@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -364,6 +365,24 @@ func DelTorrent(id string) (string, string, error) {
 
 // Nyaa.si related
 
+func calculate_len(length int) (string) {
+	var calculated float32
+	const splitter = 1024
+
+	calculated = float32(length) / splitter
+	if calculated < splitter {
+		return fmt.Sprintf("%.2f KB", calculated)
+	}
+
+	calculated = calculated / splitter
+	if calculated < splitter {
+		return fmt.Sprintf("%.2f MB", calculated)
+	}
+
+	calculated = calculated / splitter
+	return fmt.Sprintf("%.2f GB", calculated)
+}
+
 func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.AnimeShotoTorrent) {
     var q string
     nameLen, err := strconv.ParseInt(filter.NameParams, 10, 64)
@@ -419,6 +438,10 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
         if nil != err {
             log.Println(err.Error())
             return queryStr, []dbase.AnimeShotoTorrent{}
+        }
+
+        for i := 0; i < len(shoto); i++ {
+            shoto[i].SizeStr = calculate_len(shoto[i].Total_size)
         }
 
         nyaacache.Episode = episode
