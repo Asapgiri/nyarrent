@@ -1,6 +1,69 @@
 <div class="col-lg-12 px-2">
     <div class="text-muted pt-3">
 
+        <div class="card-group my-1">
+            <div class="card">
+                <div class="card-body py-1">
+                    <h5 class="card-title mb-0">
+                        {{.Anime.Title}}
+                    </h5>
+                </div>
+                <div class="card-footer">
+                <div class="row">
+                    <div class="col-md-8">
+                    <div class="m-2 pb-1 border-bottom overflow-auto small row" id="videoplayer">
+                    <video controls preload="metadata" style="width: 100%;">
+                         {{if (index .Episodes 0).Torrents}}
+                         {{$first_ep := (index (index .Episodes 0).Torrents 0)}}
+                         <source src="{{$first_ep.MP4}}" type="video/mp4">
+                         {{range $first_ep.Subtitles}}
+                         <track label="{{.Title}}" kind="subtitles" srclang="{{.Lang}}" src="{{.Path}}">
+                         {{end}}
+                         Browser does not support video tag...
+                         {{end}}
+                    </video>
+                    </div>
+                    </div>
+
+                    <div class="col-md-4">
+                    {{range $i, $e := .Episodes}}
+                    {{$id := .Index}}
+                    {{if .Torrents}}
+                    {{range .Torrents}}
+                    <script>
+                        function set_videoplayer_{{$id}}() {
+                            document.getElementById('videoplayer').innerHTML = `
+                                <video controls preload="metadata" style="width: 100%;">
+                                     <source src="{{.MP4}}" type="video/mp4">
+                                     {{range .Subtitles}}
+                                     <track label="{{.Title}}" kind="subtitles" srclang="{{.Lang}}" src="{{.Path}}">
+                                     {{end}}
+                                     Browser does not support video tag...
+                                </video>
+                            `
+
+                            buttons = document.getElementsByClassName('videoplayer_button')
+                            for (let i = 0; i < buttons.length; i++) {
+                                buttons[i].classList.remove('btn-primary')
+                                buttons[i].classList.add('btn-info')
+                            }
+                            document.getElementById('videoplayer_button_{{$id}}').classList.remove('btn-info')
+                            document.getElementById('videoplayer_button_{{$id}}').classList.add('btn-primary')
+                        }
+                    </script>
+
+                    <button class="btn btn-info my-1 videoplayer_button" style="width: 50px" onclick="set_videoplayer_{{$id}}()" id="videoplayer_button_{{$id}}">{{$id}}</button>
+                    {{end}}
+                    {{else}}
+                    <button class="btn btn btn-secondary disabled my-1" style="width: 50px" id="videoplayer_button_{{$id}}">{{$id}}</button>
+                    {{end}}
+                    {{end}}
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-3">
                 <img class="card-img-top" src="https://img.animeschedule.net/production/assets/public/img/{{.Anime.Banner}}" alt="Card image cap">
@@ -31,13 +94,11 @@
                 <div class="card-footer">
                     <form method="GET">
                         <input type="text" name="hash" id="hash" value="{{.Filter.Hash}}" hidden>
-
                         <div class="" style="float: left; margin-right: 12px;">
                             <select class="form-select" name="category" id="category" aria-label="Category" disabled>
                                 <option value="anime">Anime</option>
                             </select>
                         </div>
-
                         <div class="" style="float: left; margin-right: 12px;">
                             <select class="form-select" name="subcategory" id="subcategory" aria-label="Category">
                                 <option value="eng" {{if eq .Filter.Nyaa.SubCategory "eng"}}selected{{end}}>- English</option>
@@ -45,7 +106,6 @@
                                 <option value=""    {{if eq .Filter.Nyaa.SubCategory ""   }}selected{{end}}>- All</option>
                             </select>
                         </div>
-
                         <div class="" style="float: left; margin-right: 12px;">
                             <select class="form-select" name="group" id="group" aria-label="Group">
                                 <option value="EMBER"      {{if eq .Filter.Nyaa.Group "EMBER"     }}selected{{end}}>EMBER</option>
@@ -56,7 +116,6 @@
                                 <option value=""           {{if eq .Filter.Nyaa.Group ""         }}selected{{end}}></option>
                             </select>
                         </div>
-
                         <div class="" style="float: left; margin-right: 12px;">
                             <select class="form-select" name="resultcount" id="resultcount" aria-label="Results">
                                 <option value="5"   {{if eq .Filter.Nyaa.ResultCount "5"  }}selected{{end}}>Results - 5</option>
@@ -66,7 +125,6 @@
                                 <option value="100" {{if eq .Filter.Nyaa.ResultCount "100"}}selected{{end}}>Results - All</option>
                             </select>
                         </div>
-
                         <div class="" style="float: left; margin-right: 12px;">
                             <select class="form-select" name="nameparams" id="nameparams" aria-label="Results">
                                 <option value="2"   {{if eq .Filter.Nyaa.NameParams "2"  }}selected{{end}}>NP - 2</option>
@@ -76,7 +134,6 @@
                                 <option value="100" {{if eq .Filter.Nyaa.NameParams "100"}}selected{{end}}>NP - All</option>
                             </select>
                         </div>
-
                         <div class="" style="float: left; margin-right: 12px;">
                             <select class="form-select" name="resolution" id="resolution" aria-label="Results">
                                 <option value="1080p" {{if eq .Filter.Nyaa.Resolution "1080p" }}selected{{end}}>1080p</option>
@@ -84,18 +141,15 @@
                                 <option value=""      {{if eq .Filter.Nyaa.Resolution ""      }}selected{{end}}>All res</option>
                             </select>
                         </div>
-
                         <div class="" style="float: left; margin-right: 12px;">
                             <div class="form-check form-switch my-2">
                                 <input class="form-check-input" type="checkbox" name="forcerefresh" id="forcerefresh" {{if .Filter.Nyaa.ForseRefrsh}}checked{{end}}>
                                 <label class="form-check-label" for="forcerefresh">Force refresh</label>
                             </div>
                         </div>
-
                         <div class="" style="float: left; margin-right: 12px;">
                             <button type="submit" class="btn btn-primary">Save Filter</button>
                         </div>
-
                     </form>
                 </div>
             </div>
@@ -175,18 +229,6 @@
                             </div>
                         </form>
                     </div>
-                </div>
-                <div class="m-2 pb-1 border-bottom overflow-auto small row">
-		    <!--
-                    <embed type="video/divx" src ="{{.Url}}" autoPlay=\"false\" pluginspage=\"http://go.divx.com/plugin/download/\" style="width: 100%;"></embed>
-		    -->
-                    <video controls preload="metadata" style="width: 600px;">
-                         <source src="{{.MP4}}" type="video/mp4">
-                         {{range .Subtitles}}
-                         <track label="{{.Title}}" kind="subtitles" srclang="{{.Lang}}" src="{{.Path}}">
-                         {{end}}
-                         Browser does not support video tag...
-                    </video>
                 </div>
                 {{end}}
                 {{else}}
