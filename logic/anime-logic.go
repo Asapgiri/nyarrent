@@ -266,12 +266,16 @@ func ListAnime(route string, filter *EpisodeFilter) Anime {
 
         if dbAnime.EpisodeCurrent >= episode.Episode {
             episodes[episode.Episode - 1].Title = episode.Title
+
+			url, mp4, subs := GetTorrentFile(info.Name, true)
             episodes[episode.Episode - 1].Torrents =
                 append(episodes[episode.Episode - 1].Torrents, EpisodeTorrent{
                     Torrent: episode,
                     Info: getTorrentInfo(episode.Hash),
                     Progress: GenerateProgress(percent),
-                    Url: GetTorrentFile(info.Name, true),
+                    Url: url,
+					MP4: mp4,
+					Subtitles: subs,
                 })
         }
     }

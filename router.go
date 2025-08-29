@@ -11,6 +11,7 @@ func setup_routes() {
     http.HandleFunc("GET /index.html",          pages.Root)
 
     http.HandleFunc("GET /downloads/{title}",   pages.Download)
+    http.HandleFunc("GET /downloads/{title}/{sub}",   pages.Download)
     http.HandleFunc("GET /addtorrent",          pages.AddTorrent)
     http.HandleFunc("GET /delete/{id}",         pages.DeleteTorrent)
 

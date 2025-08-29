@@ -85,12 +85,62 @@ func zipIt(path string) string {
     return zipName
 }
 
-func convertMp4(path string) (string, []string) {
+// FIXME: Really hacky hacky solution...
+func getSubtitles(path string) []Subtitle {
+	var files []string
+
+	subsdir := strings.Join([]string{path, "subs"}, ".")
+	_, err := os.Open(subsdir)
+
+	if nil != err {
+		// Dir not exists
+		os.Mkdir(subsdir, 0755)
+
+        out, _ := exec.Command("ffmpeg", "-i", path).CombinedOutput()
+    	lines := strings.Split(string(out), "\n")
+
+		for _, line := range(lines) {
+			if strings.Contains(line, "Subtitle") {
+				// Stream #0:2(eng): Subtitle: ass (default) (forced)
+				lang := strings.Split(strings.Split(line, "(")[1], ")")[0]
+
+				files = append(files, strings.Join([]string{lang, "vtt"}, "."))
+			}
+		}
+
+		// Export out files
+		for i, file := range(files) {
+			which := strings.Join([]string{"0", "s", strconv.FormatInt(int64(i), 10)}, ":")
+			fpath := strings.Join([]string{subsdir, file}, "/")
+			exec.Command("ffmpeg", "-i", path, "-f", "webvtt", "-map", which, fpath).Output()
+		}
+	} else {
+		// Dir exists
+		entries, _ := os.ReadDir(subsdir)
+		for _, e := range(entries) {
+			files = append(files, e.Name())
+		}
+	}
+
+	subsret := []Subtitle{}
+	for _, p := range(files) {
+		title := strings.Split(p, ".")[0]
+		subsret = append(subsret, Subtitle{
+			Title: title,
+			Lang: title,
+			Path: strings.Join([]string{subsdir, p}, "/"),
+		})
+	}
+
+	return subsret
+}
+
+func convertMp4(path string) (string, []Subtitle) {
     mp4Name := strings.Join([]string{path, "mp4"}, ".")
     _, err := getFileInfo(mp4Name)
     if nil != err {
         if slices.Contains(zipMap, mp4Name) {
-            return "In progress...", []string{}
+            return "In progress...", []Subtitle{}
         }
 
         zipMap = append(zipMap, mp4Name)
@@ -104,7 +154,7 @@ func convertMp4(path string) (string, []string) {
         zipMap = removeElement(zipMap, index)
     }
 
-    return mp4Name, []string{}
+    return mp4Name, getSubtitles(path)
 }
 
 func getFileInfo(path string) (fs.FileInfo, error) {
@@ -131,14 +181,17 @@ func removeDoubleSlash(path string) string {
     return retPath
 }
 
-func GetTorrentFile(title string, publicPath bool) string {
+func GetTorrentFile(title string, publicPath bool) (string, string, []Subtitle) {
+	var mp4 string
+	var subs []Subtitle
+
     dlpath := removeDoubleSlash(strings.Join([]string{config.Config.Downloads.Disk, config.Config.Downloads.Folder}, "/"))
     path := removeDoubleSlash(strings.Join([]string{dlpath, title}, "/"))
 
     fileInfo, err := getFileInfo(path)
     if nil != err {
         log.Println(err.Error())
-        return err.Error()
+        return err.Error(), "", []Subtitle{}
     }
 
     var file string
@@ -146,16 +199,22 @@ func GetTorrentFile(title string, publicPath bool) string {
         file = zipIt(path)
     } else if ".mp4" != filepath.Ext(path) {
         log.Println(filepath.Ext(path))
-        file, _ = convertMp4(path)
+		file = path
+        mp4, subs = convertMp4(path)
     } else {
         file = path
     }
 
     if publicPath {
         file = "/" + strings.Replace(file, dlpath, "downloads", 1)
+        mp4 = "/" + strings.Replace(mp4, dlpath, "downloads", 1)
+		for i := 0; i < len(subs); i++ {
+			subs[i].Path = "/" + strings.Replace(subs[i].Path, dlpath, "downloads", 1)
+			subs[i].Path = strings.Replace(subs[i].Path, ".subs", "", 1)
+		}
     }
 
-    return file
+    return file, mp4, subs
 }
 
 func getTorrentInfoString(idHash string, isJson bool) string {
@@ -274,7 +333,7 @@ func GetTorrents(filter *TorrentsFilter) []Torrent {
             Status:     strconv.Itoa(t.Status),
             Progress:   GenerateProgress(percent),
         }
-        newTorrent.Url = GetTorrentFile(newTorrent.Title, true)
+        newTorrent.Url, _, _ = GetTorrentFile(newTorrent.Title, true)
 
         newTorrent.Info = getTorrentInfoString(newTorrent.Id, false)
         newTorrent.FullInfo = getTorrentInfo(newTorrent.Id)

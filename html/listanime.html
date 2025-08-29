@@ -181,8 +181,10 @@
                     <embed type="video/divx" src ="{{.Url}}" autoPlay=\"false\" pluginspage=\"http://go.divx.com/plugin/download/\" style="width: 100%;"></embed>
 		    -->
                     <video controls preload="metadata" style="width: 600px;">
-                         <source src="{{.Url}}" type="video/mp4">
-                         <track label="language one" kind="subtitles" srclang="en" src="{{.Url}}">
+                         <source src="{{.MP4}}" type="video/mp4">
+                         {{range .Subtitles}}
+                         <track label="{{.Title}}" kind="subtitles" srclang="{{.Lang}}" src="{{.Path}}">
+                         {{end}}
                          Browser does not support video tag...
                     </video>
                 </div>

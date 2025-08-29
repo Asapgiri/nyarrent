@@ -6,6 +6,7 @@ import (
 	"nyarrent/logger"
 	"nyarrent/logic"
 	"strconv"
+	"strings"
 )
 
 var log = logger.Logger {
@@ -91,11 +92,22 @@ func Unexpected(w http.ResponseWriter, r *http.Request) {
 
 func Download(w http.ResponseWriter, r *http.Request) {
     title := r.PathValue("title")
-    file := logic.GetTorrentFile(title, false)
+    sub := r.PathValue("sub")
 
-    log.Printf("path:  %s\n", r.URL.Path)
-    log.Printf("title: %s\n", title)
-    log.Printf("file:  %s\n", file)
+    file, _, subs := logic.GetTorrentFile(title, false)
+
+	if "" != sub {
+		for _, s := range(subs) {
+			if strings.Contains(s.Path, sub) {
+				file = s.Path
+				break
+			}
+		}
+	}
+
+    // log.Printf("path:  %s\n", r.URL.Path)
+    // log.Printf("title: %s\n", title)
+    // log.Printf("file:  %s\n", file)
 
     //w.Header().Add("Content-Type", "video/mp4")
     http.ServeFile(w, r, file)

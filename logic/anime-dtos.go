@@ -34,11 +34,19 @@ type AnimeTimetablePage struct {
     Filter      AnimeTimetableFilter
 }
 
+type Subtitle struct {
+	Title   string
+	Lang    string
+	Path    string
+}
+
 type EpisodeTorrent struct {
     Torrent     dbase.AnimeDownload
     Info        TorrentInfo
     Progress    Progress
     Url         string
+	MP4         string
+	Subtitles   []Subtitle
 }
 
 type Episodes struct {
