@@ -420,6 +420,12 @@ func DelTorrent(id string) (string, string, error) {
     }
     log.Println(string(stdout))
 
+    dlpath := removeDoubleSlash(strings.Join([]string{config.Config.Downloads.Disk, config.Config.Downloads.Folder}, "/"))
+    path := removeDoubleSlash(strings.Join([]string{dlpath, title}, "/"))
+
+    exec.Command("rm", "-rf", path + ".mp4").Output()
+    exec.Command("rm", "-rf", path + ".subs").Output()
+
     return title, hash, nil
 }
 
