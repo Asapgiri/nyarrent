@@ -56,8 +56,33 @@ func ListAllAnime(forceUpdate bool) DtoAnime {
     return ret
 }
 
-func deleteAnime() error {
-    return nil
+func DeleteAnime(route string) error {
+    dbAnime := dbase.Anime{}
+    dbAnime.Select(route)
+
+    episodes := dlSelectAll(dbAnime)
+
+    for _, e := range(episodes) {
+		DelTorrent(e.Hash)
+        e.Delete()
+    }
+
+	for i := range(dbAnime.EpisodeCurrent + 1) {
+		DeleteNyaaCached(dbAnime.Title, i)
+	}
+
+	return dbAnime.Delete()
+}
+
+func DeleteAllAnime() error {
+    anime := dbase.Anime{}
+    list, _ := anime.List()
+
+    for _, a := range(list) {
+		DeleteAnime(a.Route)
+    }
+
+	return nil
 }
 
 // =====================================================================================================================
@@ -118,6 +143,11 @@ func sJsonHttpUnmarshall(object interface{}, query string) error {
 func getLongestDayShowCount(timetable animeschedule.Timetable) ([7]int, int) {
     weekdays := [7]int{}
     dayCount := 0
+
+	if 0 == len(timetable) {
+		return [7]int{}, 0
+	}
+
     current := timetable[0].EpisodeDate
 
     for _, anime := range(timetable) {

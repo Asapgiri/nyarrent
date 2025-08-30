@@ -6,6 +6,9 @@
                 <div class="card-body py-1">
                     <h5 class="card-title mb-0">
                         {{.Anime.Title}}
+                        <a href="/delanime/{{.Anime.Route}}">
+                            <button class="btn btn-danger p-0" type="button">Remove</button>
+                        </a>
                     </h5>
                 </div>
                 <div class="card-footer">

@@ -111,7 +111,10 @@
                 <div class="card-footer p-0">
                     {{if .Added}}
                     <a href="/listanime/{{.Anime.Route}}">
-                        <button class="btn btn-secondary disabled" style="width: 100%;" type="button" disabled>Already on list</button>
+                        <button class="btn btn-secondary p-0 disabled" style="width: 100%;" type="button" disabled>Already on list</button>
+                    </a>
+                    <a href="/delanime/{{.Anime.Route}}?sendback">
+                        <button class="btn btn-danger p-0" style="width: 100%;" type="button">Remove</button>
                     </a>
                     {{else}}
                     <a href="/addanime/{{.Anime.Route}}{{if $.Filter.SendBack}}?sendback{{end}}">

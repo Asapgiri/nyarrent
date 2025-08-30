@@ -213,3 +213,28 @@ func RefreshNyaa(w http.ResponseWriter, r *http.Request) {
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
+
+func DeleteAnime(w http.ResponseWriter, r *http.Request) {
+    route := r.PathValue("route")
+    sendback := r.URL.Query().Has("sendback")
+
+	logic.DeleteAnime(route)
+
+    if sendback {
+        http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
+    } else {
+    	http.Redirect(w, r, "/", http.StatusSeeOther)
+    }
+}
+
+func DeleteAllAnime(w http.ResponseWriter, r *http.Request) {
+    sendback := r.URL.Query().Has("sendback")
+
+	logic.DeleteAllAnime()
+
+    if sendback {
+        http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
+    } else {
+    	http.Redirect(w, r, "/", http.StatusSeeOther)
+    }
+}

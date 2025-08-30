@@ -17,6 +17,7 @@ import (
 	"time"
 	"fmt"
 	"path/filepath"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -408,6 +409,10 @@ func DelTorrent(id string) (string, string, error) {
         return "", "", err
     }
     lines := strings.Split(string(stdout), "\n")
+
+	if len(lines) <= 3 {
+		return "", "", errors.New("Internal Error")
+	}
 
     title := strings.Join(strings.Fields(lines[2])[1:], " ")
     hash := strings.Fields(lines[3])[1]
