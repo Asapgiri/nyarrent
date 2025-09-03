@@ -6,6 +6,8 @@ import (
 )
 
 func setup_routes() {
+    http.HandleFunc("GET /.well-known/pki-validation/{pkifile}", pages.ReturnPkiValidation)
+
     http.HandleFunc("GET /",                    pages.Root)
     http.HandleFunc("GET /index",               pages.Root)
     http.HandleFunc("GET /index.html",          pages.Root)

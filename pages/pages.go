@@ -2,6 +2,7 @@ package pages
 
 import (
 	"io"
+	"os"
 	"net/http"
 	"nyarrent/logger"
 	"nyarrent/logic"
@@ -12,6 +13,19 @@ import (
 var log = logger.Logger {
     Color: logger.Colors.Red,
     Pretext: "pages",
+}
+
+func ReturnPkiValidation(w http.ResponseWriter, r *http.Request) {
+    file := r.PathValue("pkifile")
+
+    // TODO: Create config path for it
+    base_path := "/var/www/html/.well-known/pki-validation/"
+    file_read, err := os.ReadFile(base_path + file)
+    if nil != err {
+	    http.Error(w, "Not found!", http.StatusNotFound)
+    }
+
+    io.WriteString(w, string(file_read))
 }
 
 func Root(w http.ResponseWriter, r *http.Request) {
