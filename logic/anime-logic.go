@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"nyarrent/config"
 	"nyarrent/dbase"
+	"os"
+	"os/exec"
 	"slices"
 	"strconv"
 	"strings"
@@ -244,6 +246,32 @@ func FindNewAnimes(query string, page string) AnimeSearchPage {
     return aniList
 }
 
+func ReadBannerFile(imgroute string) string {
+    dlpath := removeDoubleSlash(strings.Join([]string{config.Config.Downloads.Disk, config.Config.Downloads.Folder}, "/"))
+	img_path := removeDoubleSlash(strings.Join([]string{dlpath, "imgcache", strings.ReplaceAll(imgroute, "/", "-")}, "/"))
+
+	file_read, err := os.ReadFile(img_path)
+    if nil != err {
+        return "Not found..."
+    }
+
+	return string(file_read)
+}
+
+func CacheBanner(imgroute string) string {
+	as_img_url := "https://img.animeschedule.net/production/assets/public/img/" + imgroute
+
+    dlpath := removeDoubleSlash(strings.Join([]string{config.Config.Downloads.Disk, config.Config.Downloads.Folder}, "/"))
+	img_path := removeDoubleSlash(strings.Join([]string{dlpath, "imgcache", strings.ReplaceAll(imgroute, "/", "-")}, "/"))
+
+	_, err := os.Open(img_path)
+
+	if nil != err {
+        exec.Command("wget", "-O", img_path, as_img_url).Output()
+	}
+
+	return "/imgcache/" + imgroute
+}
 
 func AddorUpdateAnime(route string) (dbase.Anime, error) {
     anime := animeschedule.ShowDetail{}
@@ -259,7 +287,7 @@ func AddorUpdateAnime(route string) (dbase.Anime, error) {
     dbAnime.Title =         anime.Title
     dbAnime.JpTitle =       anime.Names.Japanese
     dbAnime.Route =         anime.Route
-    dbAnime.Banner =        anime.ImageVersionRoute
+    dbAnime.Banner =        CacheBanner(anime.ImageVersionRoute)
     dbAnime.EpisodeCount =  anime.Episodes
     dbAnime.Status =        anime.Status
     dbAnime.JpnTime =       anime.JpnTime

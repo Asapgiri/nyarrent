@@ -238,3 +238,11 @@ func DeleteAllAnime(w http.ResponseWriter, r *http.Request) {
     	http.Redirect(w, r, "/", http.StatusSeeOther)
     }
 }
+
+func DownloadCachedImages(w http.ResponseWriter, r *http.Request) {
+    imgroute := r.PathValue("imgroute")
+
+	img := logic.ReadBannerFile(imgroute)
+
+	io.WriteString(w, img)
+}
