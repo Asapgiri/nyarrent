@@ -15,14 +15,16 @@
                 <div class="row">
                     <div class="col-md-8">
                     <div class="m-2 pb-1 border-bottom overflow-auto small row" id="videoplayer">
-                    <video controls preload="metadata" style="width: 100%;">
+                    <video controls preload="metadata" style="width: 100%; padding: 0px;">
+                         {{if .Episodes}}
                          {{if (index .Episodes 0).Torrents}}
                          {{$first_ep := (index (index .Episodes 0).Torrents 0)}}
                          <source src="{{$first_ep.MP4}}" type="video/mp4">
                          {{range $first_ep.Subtitles}}
-                         <track label="{{.Title}}" kind="subtitles" srclang="{{.Lang}}" src="{{.Path}}">
+			 <track label="{{.Title}}" kind="subtitles" srclang="{{.Lang}}" src="{{.Path}}" {{if eq .Lang "eng"}}default{{end}}>
                          {{end}}
                          Browser does not support video tag...
+                         {{end}}
                          {{end}}
                     </video>
                     </div>
@@ -36,13 +38,22 @@
                     <script>
                         function set_videoplayer_{{$id}}() {
                             document.getElementById('videoplayer').innerHTML = `
-                                <video controls preload="metadata" style="width: 100%;">
+                                <video controls autoplay preload="metadata" style="width: 100%; padding: 0px;">
                                      <source src="{{.MP4}}" type="video/mp4">
                                      {{range .Subtitles}}
-                                     <track label="{{.Title}}" kind="subtitles" srclang="{{.Lang}}" src="{{.Path}}">
+                                     <track label="{{.Title}}" kind="subtitles" srclang="{{.Lang}}" src="{{.Path}}" {{if eq .Lang "eng"}}default{{end}}>
                                      {{end}}
                                      Browser does not support video tag...
                                 </video>
+				    <div class="row m-0 p-0" style="width: 100%">
+					<div class="col-md-5 m-0 p-0 p-0">
+			   <button class="btn btn-info m-0 p-0" style="width: 100%" {{if eq $i $.Anime.EpisodeCurrent}}disabled{{else}}onclick="set_videoplayer_{{add $id -1}}()"{{end}}>Previous</button>
+					</div>
+			      		<div class="col-md-2 m-0 p-0">{{$id}}</div>
+					<div class="col-md-5 m-0 p-0">
+			   <button class="btn btn-info m-0 p-0" style="width: 100%" {{if eq $i 0}}disabled{{else}}onclick="set_videoplayer_{{add $id 1}}()"{{end}}>Next</button>
+					</div>
+				    </div>
                             `
 
                             buttons = document.getElementsByClassName('videoplayer_button')

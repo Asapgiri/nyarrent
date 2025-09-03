@@ -42,6 +42,8 @@ var funcMap = template.FuncMap {
     "timelt":   func(a time.Time, b time.Time) bool {return b.Compare(a) <= 0},
     "now":      time.Now,
     "day":      func() time.Duration {return time.Hour * 24},
+    "add":	func(a int, b int) int {return a + b},
+    "len":	func(arr []any) int {return len(arr)},
 }
 
 func read_artifact(path string, header http.Header) (string, string) {
