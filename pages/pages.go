@@ -227,7 +227,9 @@ func AddEpisode(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-	cache.Invalidate(getMap(r).Episode.Hash)
+	filter := getMap(r)
+	cache.Invalidate(filter.Episode.Hash)
+	cache.Invalidate(filter.Torrents)
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
@@ -246,7 +248,9 @@ func DelEpisode(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-	cache.Invalidate(getMap(r).Episode.Hash)
+	filter := getMap(r)
+	cache.Invalidate(filter.Episode.Hash)
+	cache.Invalidate(filter.Torrents)
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
