@@ -44,3 +44,16 @@ func (c *Cache) GetWithInterval(key any, get_value func()any, interval time.Dura
 func (c *Cache) ForceGetWithInterval(key any, get_value func()any, interval time.Duration) interface{} {
 	return c.get(key, get_value, interval, true)
 }
+
+func (c *Cache) Invalidate(key any) {
+	if _, ok := cache[c.Module]; !ok {
+		cache[c.Module] = map[string]any{}
+	}
+	lcache := cache[c.Module]
+	key_tmp, _ := json.Marshal(key)
+	lkey := string(key_tmp)
+
+	if _, ok := lcache[lkey]; ok {
+		delete(lcache, lkey)
+	}
+}

@@ -151,6 +151,10 @@ func AddTorrent(w http.ResponseWriter, r *http.Request) {
 
     logic.AddTorrent(link)
 
+	filter := getMap(r)
+	cache.Invalidate(filter.Episode.Hash)
+	cache.Invalidate(filter.Torrents)
+
     http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
@@ -160,6 +164,10 @@ func DeleteTorrent(w http.ResponseWriter, r *http.Request) {
     log.Printf("path:  %s\n", r.URL.Path)
 
     logic.DelTorrent(id)
+
+	filter := getMap(r)
+	cache.Invalidate(filter.Episode.Hash)
+	cache.Invalidate(filter.Torrents)
 
     http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -219,10 +227,7 @@ func AddEpisode(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    filter := getMap(r)
-	cache.ForceGet(getMap(r).Episode.Hash, func() any {
-		return logic.ListAnime(route, &filter.Episode)
-	})
+	cache.Invalidate(getMap(r).Episode.Hash)
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
@@ -241,10 +246,7 @@ func DelEpisode(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    filter := getMap(r)
-	cache.ForceGet(getMap(r).Episode.Hash, func() any {
-		return logic.ListAnime(route, &filter.Episode)
-	})
+	cache.Invalidate(getMap(r).Episode.Hash)
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
@@ -258,9 +260,7 @@ func RefreshNyaa(w http.ResponseWriter, r *http.Request) {
 
     logic.RefreshNyaa(route, index, filter.Episode.Nyaa)
 
-	cache.ForceGet(getMap(r).Episode.Hash, func() any {
-		return logic.ListAnime(route, &filter.Episode)
-	})
+	cache.Invalidate(getMap(r).Episode.Hash)
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
