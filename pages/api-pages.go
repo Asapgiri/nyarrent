@@ -11,3 +11,10 @@ func ApiGetTorrentJson(w http.ResponseWriter, r *http.Request) {
 
     io.WriteString(w, logic.ApiGetTorrentJson(hash))
 }
+
+func InvalidateCache(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.Query().Get("hash")
+	cache.Invalidate(key)
+
+    io.WriteString(w, "OK")
+}

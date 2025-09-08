@@ -30,4 +30,5 @@ func setup_routes() {
     http.HandleFunc("GET /refreshnyaa/{route}/{index}", pages.RefreshNyaa)
 
     http.HandleFunc("GET /api/gettorrent/{hash}",   pages.ApiGetTorrentJson)
+	http.HandleFunc("GET /api/invalidate/{hash}",   pages.InvalidateCache)
 }

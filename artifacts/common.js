@@ -44,6 +44,19 @@ function refreshTorrent(hash) {
                 if (percent < 100) {
                     setTimeout(() => {refreshTorrent(hash)}, 1000)
                 }
+                else {
+                    invalidate(hash);
+                }
+            }
+        })
+}
+
+function invalidate(hash) {
+    fetch('/api/invalidate/' + hash)
+        .then(resp => resp.json())
+        .then(json => {
+            if ('success' == json.result) {
+                location.reload();
             }
         })
 }
