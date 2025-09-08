@@ -2,17 +2,25 @@ package pages
 
 import (
 	"io"
-	"os"
 	"net/http"
+	"nyarrent/dbase"
 	"nyarrent/logger"
 	"nyarrent/logic"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var log = logger.Logger {
     Color: logger.Colors.Red,
     Pretext: "pages",
+}
+
+var cache = dbase.Cache {
+	Module: "pages",
+	Time: time.Now(),
+	Interval: 30 * time.Minute,
 }
 
 func ReturnPkiValidation(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +39,9 @@ func ReturnPkiValidation(w http.ResponseWriter, r *http.Request) {
 func Root(w http.ResponseWriter, r *http.Request) {
     if "/" == r.URL.Path {
         fu := r.URL.Query().Get("fu")
-        dto := logic.ListAllAnime("true" == fu)
+        dto := cache.GetWithInterval("root", func() any {
+			return logic.ListAllAnime("true" == fu)
+		}, time.Second).(logic.DtoAnime)
         dto.SearchText = r.URL.Query().Get("query")
 
         if "" != dto.SearchText {
@@ -55,7 +65,12 @@ func ListTimetables(w http.ResponseWriter, r *http.Request) {
     refreshMap(&filter, r, "sendback", "onlyonlist")
 
     fil, _ := read_artifact("timetables.html", w.Header())
-    Render(w, fil, logic.ListTimetables(filter.AnimeTimetable))
+
+	logic_cached := cache.Get(filter.AnimeTimetable, func() any {
+		return logic.ListTimetables(filter.AnimeTimetable)
+	}).(logic.AnimeTimetablePage)
+
+    Render(w, fil, logic_cached)
 }
 
 func SearchNewAnimes(w http.ResponseWriter, r *http.Request) {
@@ -82,8 +97,12 @@ func ListAllTorrents(w http.ResponseWriter, r *http.Request) {
 		filter.Torrents.EpisodesPerPage = defaultFilter.Torrents.EpisodesPerPage
 	}
 
+	logic_cached := cache.Get(filter.Torrents, func() any {
+		return logic.GetTorrents(&filter.Torrents)
+	}).([]logic.Torrent)
+
     tl := logic.DtoBase {
-        TorrentList: logic.GetTorrents(&filter.Torrents),
+        TorrentList: logic_cached,
         DiskUsage: logic.GetDiskUsage(),
 		Filter: filter.Torrents,
     }
@@ -176,8 +195,12 @@ func ListAnime(w http.ResponseWriter, r *http.Request) {
 
     refreshMap(&filter, r, "category", "subcategory", "resultcount", "nameparams", "forcerefresh")
 
+	logic_cached := cache.Get(filter.Episode.Hash, func() any {
+		return logic.ListAnime(route, &filter.Episode)
+	}).(logic.Anime)
+
     fil, _ := read_artifact("listanime.html", w.Header())
-    Render(w, fil, logic.ListAnime(route, &filter.Episode))
+    Render(w, fil, logic_cached)
     refreshMap(&filter, r)
 }
 
@@ -196,6 +219,11 @@ func AddEpisode(w http.ResponseWriter, r *http.Request) {
         }
     }
 
+    filter := getMap(r)
+	cache.ForceGet(getMap(r).Episode.Hash, func() any {
+		return logic.ListAnime(route, &filter.Episode)
+	})
+
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
 
@@ -213,6 +241,11 @@ func DelEpisode(w http.ResponseWriter, r *http.Request) {
         }
     }
 
+    filter := getMap(r)
+	cache.ForceGet(getMap(r).Episode.Hash, func() any {
+		return logic.ListAnime(route, &filter.Episode)
+	})
+
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
 
@@ -224,6 +257,10 @@ func RefreshNyaa(w http.ResponseWriter, r *http.Request) {
     refreshMap(&filter, r)
 
     logic.RefreshNyaa(route, index, filter.Episode.Nyaa)
+
+	cache.ForceGet(getMap(r).Episode.Hash, func() any {
+		return logic.ListAnime(route, &filter.Episode)
+	})
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
 }
