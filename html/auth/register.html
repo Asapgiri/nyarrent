@@ -1,0 +1,35 @@
+<div class="py-5">
+    <div class="my-3 p-3 bg-white rounded box-shadow border border-gray center-400">
+        {{if .Auth.Error}}
+        <h6 class="border-bottom border-gray pb-2 mb-0 text-bold red">{{ .Auth.Error }}</h6>
+        {{end}}
+        <h6 class="border-bottom border-gray pb-2 mb-0">{{.Dictionary.Auth.Register}}</h6>
+            <div class="text-muted pt-3">
+                <!-- FIXME: Add Proper form validation!!! -->
+                <form name="form" method="post">
+                    <div id="form">
+                        <div class="form-group">
+                            <input type="text" id="form_userUsername" name="form[userUsername]" required="required" placeholder="{{.Dictionary.Auth.Username}}" class="form-control">
+                            <input type="text" id="form_userName" name="form[userName]" placeholder="{{.Dictionary.Auth.Name}}" class="form-control">
+                            <input type="text" id="form_userEmail" name="form[userEmail]" required="required" placeholder="{{.Dictionary.Auth.Email}}" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="form_userPassA" name="form[userPassA]" required="required" placeholder="{{.Dictionary.Auth.Password}}" autocomplete="current-password" class="form-control">
+                            <input type="password" id="form_userPassB" name="form[userPassB]" required="required" placeholder="{{.Dictionary.Auth.PasswordAgain}}" autocomplete="current-password" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" id="form_Login" name="form[Register]" class="form-control btn-primary btn">{{.Dictionary.Auth.Register}}</button>
+                        </div>
+                        <!-- FIXME: CSFR Token should be provided!!! -->
+                        <input type="hidden" id="form__token" name="form[_token]" value="rS_4uOzkks7CsvOKCwoipqYLSrROEHruF1aGkQXuW9g"></div>
+                </form>
+                <br>
+                <div class="text-muted">
+                    <small>
+                        {{.Dictionary.Auth.AlreadyHaveAnAccount}}
+                        <a class="float-right" href="/login">{{.Dictionary.Auth.Login}}</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+</div>

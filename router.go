@@ -12,6 +12,12 @@ func setup_routes() {
     http.HandleFunc("GET /index",               pages.Root)
     http.HandleFunc("GET /index.html",          pages.Root)
 
+    http.HandleFunc("GET /login",               pages.Login)
+    http.HandleFunc("POST /login",              pages.Login)
+    http.HandleFunc("GET /register/{sha}",      pages.Register)
+    http.HandleFunc("POST /register/{sha}",     pages.Register)
+    http.HandleFunc("GET /logout",              pages.Logout)
+
     http.HandleFunc("GET /downloads/{title}",           pages.Download)
     http.HandleFunc("GET /downloads/{title}/{sub}",     pages.Download)
     http.HandleFunc("GET /addtorrent",                  pages.AddTorrent)

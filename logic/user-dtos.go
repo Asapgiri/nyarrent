@@ -1,5 +1,18 @@
 package logic
 
+import (
+	"time"
+)
+
+type User struct {
+    Id              string
+    RegDate         time.Time
+    EditDate        time.Time
+    Username        string
+    Email           string
+    Roles           []string
+}
+
 type Progress struct {
     Color       string
     Percentage  int

@@ -7,6 +7,28 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type User struct {
+    Id              primitive.ObjectID `bson:"_id"`
+    RegDate         time.Time
+    EditDate        time.Time
+    Username        string             `bson:"username"`
+    PasswordHash    string
+    Email           string             `bson:"email"`
+    Roles           []string
+}
+
+type RegisterSha struct {
+    Id              primitive.ObjectID `bson:"_id"`
+	Sha             string
+	ValidUntil      time.Time
+}
+
+type UserShows struct {
+	Id              primitive.ObjectID `bson:"_id"`
+	UserId          primitive.ObjectID
+	AnimeId		    primitive.ObjectID
+}
+
 type Anime struct {
     Id              primitive.ObjectID `bson:"_id"`
     Title           string

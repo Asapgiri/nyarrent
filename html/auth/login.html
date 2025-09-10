@@ -1,0 +1,32 @@
+<div class="py-5">
+    <div class="my-3 p-3 bg-white rounded box-shadow border border-gray center-400">
+        {{if .Auth.Error}}
+        <h6 class="border-bottom border-gray pb-2 mb-0 text-bold red">{{ .Auth.Error }}</h6>
+        {{end}}
+        <h6 class="border-bottom border-gray pb-2 mb-0">{{.Dictionary.Auth.Login}}</h6>
+            <div class="text-muted pt-3">
+                <!-- FIXME: Add Proper form validation!!! -->
+                <form name="form" method="post">
+                    <div id="form">
+                        <div class="form-group">
+                            <input type="text" id="form_userName" name="form[userNameOrEmail]" required="required" placeholder="{{.Dictionary.Auth.UsernameOrEmail}}" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="form_userPass" name="form[userPass]" required="required" placeholder="{{.Dictionary.Auth.Password}}" autocomplete="current-password" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" id="form_Bejelentkezés" name="form[Login]" class="form-control btn-primary btn">{{.Dictionary.Auth.Login}}</button>
+                        </div>
+                        <!-- FIXME: CSFR Token should be provided!!! -->
+                        <input type="hidden" id="form__token" name="form[_token]" value="rS_4uOzkks7CsvOKCwoipqYLSrROEHruF1aGkQXuW9g"></div>
+                </form>
+                <br>
+                <div class="text-muted">
+                    <small>
+                        <a href="/pwr_r">{{.Dictionary.Auth.ForgottenPassword}}</a>
+                        <a class="float-right" href="/register">{{.Dictionary.Auth.Register}}</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+</div>

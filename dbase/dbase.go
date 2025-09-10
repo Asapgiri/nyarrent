@@ -14,6 +14,8 @@ import (
 var mongo_client *mongo.Client
 var db *mongo.Database
 
+var dbUSERS                 *mongo.Collection
+var dbREGISTER_SHA          *mongo.Collection
 var dbSAVED_ANIMES          *mongo.Collection
 var dbDOWNLOADED_EPISODES   *mongo.Collection
 var dbNYAA_CACHE            *mongo.Collection
@@ -47,11 +49,75 @@ func Connect() error {
 	}
 	log.Println("Pinged your deployment. You successfully connected to MongoDB!")
 
+    dbUSERS = db.Collection("users")
+	dbREGISTER_SHA = db.Collection("register-sha")
     dbSAVED_ANIMES = db.Collection("saved-anime")
     dbDOWNLOADED_EPISODES = db.Collection("downloaded-episodes")
     dbNYAA_CACHE = db.Collection("nyaa-cache")
 
     return nil
+}
+
+// =====================================================================================================================
+// Internal User Listing CRUD
+
+func (user *User) List() ([]User, error) {
+    var anyime []User
+
+    cursor, err := dbUSERS.Find(context.TODO(), bson.D{{}})
+    if nil != err {
+        return anyime, err
+    }
+
+    err = cursor.All(context.TODO(), &anyime)
+
+    return anyime, err
+}
+
+func (user *User) Select(id primitive.ObjectID) error {
+    return dbUSERS.FindOne(context.TODO(), bson.D{{"_id", id}}).Decode(user)
+}
+
+func (user *User) FindByUsername(username string) error {
+    return dbUSERS.FindOne(context.TODO(), bson.D{{"username", username}}).Decode(user)
+}
+
+func (user *User) FindByEmail(email string) error {
+    return dbUSERS.FindOne(context.TODO(), bson.D{{"email", email}}).Decode(user)
+}
+
+func (user *User) Add() error {
+    _, err := dbUSERS.InsertOne(context.TODO(), user)
+    return err
+}
+
+func (user *User) Update() error {
+    _, err := dbUSERS.ReplaceOne(context.TODO(), bson.D{{"_id", user.Id}}, user)
+    return err
+}
+
+func (user *User) Delete() error {
+    filter := bson.D{{"_id", user.Id}}
+    _, err := dbUSERS.DeleteOne(context.TODO(), filter)
+    return err
+}
+
+// =====================================================================================================================
+// Register SHA CRUD
+
+func (sha *RegisterSha) Find(sha_str string) error {
+	return dbREGISTER_SHA.FindOne(context.TODO(), bson.D{{"sha", sha_str}}).Decode(sha)
+}
+
+func (sha *RegisterSha) Add() error {
+	_, err := dbREGISTER_SHA.InsertOne(context.TODO(), sha)
+	return err
+}
+
+func (sha *RegisterSha) Delete() error {
+	filter := bson.D{{"_id", sha.Id}}
+	_, err := dbREGISTER_SHA.DeleteOne(context.TODO(), filter)
+	return err
 }
 
 // =====================================================================================================================

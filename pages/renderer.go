@@ -10,6 +10,7 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	"nyarrent/session"
 )
 
 var artifact_path string = "artifacts/"
@@ -78,7 +79,7 @@ func read_artifact(path string, header http.Header) (string, string) {
     return string(file_read), file_type
 }
 
-func Render(w http.ResponseWriter, temp string, dto any) {
+func Render(session session.Sessioner, w http.ResponseWriter, temp string, dto any) {
     tmp, err := template.ParseFiles(base_template_path)
     if nil != err {
         io.WriteString(w, "Templating error!")

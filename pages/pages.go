@@ -6,6 +6,7 @@ import (
 	"nyarrent/dbase"
 	"nyarrent/logger"
 	"nyarrent/logic"
+	"nyarrent/session"
 	"os"
 	"strconv"
 	"strings"
@@ -37,6 +38,12 @@ func ReturnPkiValidation(w http.ResponseWriter, r *http.Request) {
 }
 
 func Root(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.USER}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     if "/" == r.URL.Path {
         fu := r.URL.Query().Get("fu")
         dto := cache.GetWithInterval("root", func() any {
@@ -50,13 +57,19 @@ func Root(w http.ResponseWriter, r *http.Request) {
         }
 
         fil, _ := read_artifact("index.html", w.Header())
-        Render(w, fil, dto)
+        Render(session, w, fil, dto)
     } else {
-        Unexpected(w, r)
+        Unexpected(session, w, r)
     }
 }
 
 func ListTimetables(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.USER}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     filter := getMap(r)
 
     filter.AnimeTimetable.OnlyOnList = r.URL.Query().Get("onlyonlist") == "on"
@@ -70,18 +83,30 @@ func ListTimetables(w http.ResponseWriter, r *http.Request) {
 		return logic.ListTimetables(filter.AnimeTimetable)
 	}).(logic.AnimeTimetablePage)
 
-    Render(w, fil, logic_cached)
+    Render(session, w, fil, logic_cached)
 }
 
 func SearchNewAnimes(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.USER}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     query := r.URL.Query().Get("query")
     page := r.URL.Query().Get("page")
 
     fil, _ := read_artifact("searchanime.html", w.Header())
-    Render(w, fil, logic.FindNewAnimes(query, page))
+    Render(session, w, fil, logic.FindNewAnimes(query, page))
 }
 
 func ListAllTorrents(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.USER}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     filter := getMap(r)
 
     page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
@@ -108,14 +133,14 @@ func ListAllTorrents(w http.ResponseWriter, r *http.Request) {
     }
 
     fil, _ := read_artifact("listall.html", w.Header())
-    Render(w, fil, tl)
+    Render(session, w, fil, tl)
 }
 
-func Unexpected(w http.ResponseWriter, r *http.Request) {
+func Unexpected(session session.Sessioner, w http.ResponseWriter, r *http.Request) {
     fil, typ := read_artifact(r.URL.Path, w.Header())
 
     if "text" == typ {
-        Render(w, fil, nil)
+        Render(session, w, fil, nil)
     } else {
         io.WriteString(w, fil)
     }
@@ -124,6 +149,12 @@ func Unexpected(w http.ResponseWriter, r *http.Request) {
 // For torrents
 
 func Download(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.USER}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     title := r.PathValue("title")
     sub := r.PathValue("sub")
 
@@ -147,6 +178,12 @@ func Download(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddTorrent(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.ADMIN, logic.ROLES.EDITOR, logic.ROLES.MODERATOR}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     link := r.URL.Query().Get("link")
 
     logic.AddTorrent(link)
@@ -159,6 +196,12 @@ func AddTorrent(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTorrent(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.ADMIN, logic.ROLES.EDITOR, logic.ROLES.MODERATOR}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     id := r.PathValue("id")
 
     log.Printf("path:  %s\n", r.URL.Path)
@@ -175,6 +218,12 @@ func DeleteTorrent(w http.ResponseWriter, r *http.Request) {
 // For anime caching
 
 func AddAnime(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.ADMIN, logic.ROLES.EDITOR, logic.ROLES.MODERATOR}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     route := r.PathValue("route")
     sendback := r.URL.Query().Has("sendback")
 
@@ -189,6 +238,12 @@ func AddAnime(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListAnime(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.USER}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     route := r.PathValue("route")
 
     filter := getMap(r)
@@ -208,11 +263,17 @@ func ListAnime(w http.ResponseWriter, r *http.Request) {
 	}).(logic.Anime)
 
     fil, _ := read_artifact("listanime.html", w.Header())
-    Render(w, fil, logic_cached)
+    Render(session, w, fil, logic_cached)
     refreshMap(&filter, r)
 }
 
 func AddEpisode(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.ADMIN, logic.ROLES.EDITOR, logic.ROLES.MODERATOR}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     route := r.URL.Query().Get("route")
     index := r.URL.Query().Get("index")
     link := r.URL.Query().Get("link")
@@ -235,6 +296,12 @@ func AddEpisode(w http.ResponseWriter, r *http.Request) {
 }
 
 func DelEpisode(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.ADMIN, logic.ROLES.EDITOR, logic.ROLES.MODERATOR}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     route := r.URL.Query().Get("route")
     hash := r.URL.Query().Get("hash")
 
@@ -256,6 +323,12 @@ func DelEpisode(w http.ResponseWriter, r *http.Request) {
 }
 
 func RefreshNyaa(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.ADMIN, logic.ROLES.EDITOR, logic.ROLES.MODERATOR}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     route := r.PathValue("route")
     index := r.PathValue("index")
 
@@ -270,6 +343,12 @@ func RefreshNyaa(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteAnime(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.ADMIN, logic.ROLES.EDITOR, logic.ROLES.MODERATOR}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     route := r.PathValue("route")
     sendback := r.URL.Query().Has("sendback")
 
@@ -283,6 +362,12 @@ func DeleteAnime(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteAllAnime(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+    if !checkForAccess(session, []string{logic.ROLES.ADMIN, logic.ROLES.EDITOR, logic.ROLES.MODERATOR}) {
+       renderPageWithAccessViolation(w, r)
+       return
+    }
+
     sendback := r.URL.Query().Has("sendback")
 
 	logic.DeleteAllAnime()
@@ -292,4 +377,22 @@ func DeleteAllAnime(w http.ResponseWriter, r *http.Request) {
     } else {
     	http.Redirect(w, r, "/", http.StatusSeeOther)
     }
+}
+
+func NotFound(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+
+    fil, _ := read_artifact("not-found.html", w.Header())
+    Render(session, w, fil, nil)
+}
+
+func AccessViolation(w http.ResponseWriter, r *http.Request) {
+    session := session.GetCurrentSession(r)
+
+    fil, _ := read_artifact("access-violation.html", w.Header())
+    Render(session, w, fil, nil)
+}
+
+func renderPageWithAccessViolation(w http.ResponseWriter, r *http.Request) {
+    AccessViolation(w, r)
 }
