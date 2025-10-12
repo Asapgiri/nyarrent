@@ -35,6 +35,10 @@ func sizeToText(size int) string {
     }
 }
 
+func formatToLocalTime(local time.Location, t time.Time, format string) string {
+    return t.In(&local).Format(format)
+}
+
 var funcMap = template.FuncMap {
     "inc":      func(i int) int {return i + 1},
     "dec":      func(i int) int {return i - 1},
@@ -43,8 +47,9 @@ var funcMap = template.FuncMap {
     "timelt":   func(a time.Time, b time.Time) bool {return b.Compare(a) <= 0},
     "now":      time.Now,
     "day":      func() time.Duration {return time.Hour * 24},
-    "add":	func(a int, b int) int {return a + b},
-    "len":	func(arr []any) int {return len(arr)},
+    "add":	    func(a int, b int) int {return a + b},
+    "len":	    func(arr []any) int {return len(arr)},
+    "ftime":    formatToLocalTime,
 }
 
 func read_artifact(path string, header http.Header) (string, string) {

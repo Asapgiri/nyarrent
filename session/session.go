@@ -1,17 +1,19 @@
 package session
 
 import (
-	"nyarrent/logic"
 	"net/http"
+	"nyarrent/logic"
+	"time"
 
 	"github.com/gorilla/sessions"
 )
 
 type Sessioner struct {
-    Auth logic.Auth
-    Main string
-    Path string
-    Dto any
+    Auth        logic.Auth
+    Main        string
+    Path        string
+    Dto         any
+    UserLocal   time.Location
 }
 //FIXME: Handle fully separately in every function/session!!
 //var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
@@ -54,5 +56,7 @@ func (session *Sessioner) SetError(msg string) {
 func GetCurrentSession(r *http.Request) Sessioner {
     session := Sessioner{}
     session.Authenticate(r)
+    // FIXME: Get from user or set somewhere.
+    session.UserLocal = *time.Local
     return session
 }

@@ -198,7 +198,7 @@
                                 aria-valuemin="0" aria-valuemax="100">{{$cellP.Progress.Percentage}}%</div>
                         </div>
                         {{else if and (eq $i 0) (timegt now $.Anime.EpisodeRelease)}}
-                        Airing at: {{$.Anime.EpisodeRelease.Format "2006-01-02 15:04:05"}}
+                        Airing at: {{ftime $.UserLocal $.Anime.EpisodeRelease "2006-01-02 15:04:05"}}
                         {{end}}
                     </div>
                     <div class="col-md-8">
