@@ -35,8 +35,8 @@ func sizeToText(size int) string {
     }
 }
 
-func formatToLocalTime(local time.Location, t time.Time, format string) string {
-    return t.In(&local).Format(format)
+func formatToLocalTime(t time.Time, format string) string {
+    return t.Local().Format(format)
 }
 
 var funcMap = template.FuncMap {
