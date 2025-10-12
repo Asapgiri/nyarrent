@@ -13,6 +13,10 @@ func checkForAccess(session session.Sessioner, requested_roles []string) bool {
 		return false
 	}
 
+	if slices.Contains(session.Auth.Roles, logic.ROLES.ADMIN) {
+		return true
+	}
+
 	for _, reqrole := range(requested_roles) {
 		if slices.Contains(session.Auth.Roles, reqrole) {
 			return true
@@ -89,6 +93,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
         } else {
             session.Delete(w, r)
             session.New(w, r, user.Username)
+	    sha.Delete()
         }
     } else {
         session.SetError("")

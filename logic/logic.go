@@ -476,6 +476,7 @@ func GetNyaaList(title string, episode int, filter NyaaFilter) (string, []dbase.
         q,
         episodeStr,
         filter.Resolution,
+	"WEB-DL",
     }, "+")
     shoto := []dbase.AnimeShotoTorrent{}
 

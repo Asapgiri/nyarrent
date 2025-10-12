@@ -66,17 +66,25 @@
                 <a href="/listanime/{{.Anime.Route}}">
                     <img src="https://img.animeschedule.net/production/assets/public/img/{{.Anime.Banner}}" class="card-img-top" alt="{{.Anime.Title}}" title="{{.Anime.Title}}" style="height: 260px; object-fit: cover;">
                 </a>
-                <div class="card-body">
-                    <h5 class="card-title">
-                        {{.Anime.EpisodeCount}}/<strong>{{.Anime.EpisodeCurrent}}</strong>
-                        {{.Anime.Status}}
-                    </h5>
-                    <p class="card-text" style="height: 72px; overflow: hidden;">
-		    	<strong><a href="/listanime/{{.Anime.Route}}" alt="{{.Anime.Title}}" title="{{.Anime.Title}}">{{.Anime.Title}}</a></strong>
-                    </p>
+                <div class="card-body p-1">
+                    <div class="card-text" style="height: 24px; overflow: hidden; text">
+		    	<small><a href="/listanime/{{.Anime.Route}}" alt="{{.Anime.Title}}" title="{{.Anime.Title}}">{{.Anime.Title}}</a></small>
+                    </div>
                 </div>
                 <div class="card-footer text-center p-0">
-                        {{.Anime.EpisodeRelease.Format "2006-01-02 15:04:05"}}
+		    {{if not (eq .Anime.Status "Ongoing")}}
+		    	<small>{{.Anime.Status}}</small>
+		    {{else}}
+                        {{.Anime.EpisodeCount}}/<strong>{{.Anime.EpisodeCurrent}}</strong>
+		    {{end}}
+			---
+			<strong>{{.Anime.EpisodeRelease.Format "15:04"}}</strong>
+			---
+		    {{if not (eq .Anime.Status "Ongoing")}}
+			<small>{{.Anime.EpisodeRelease.Format "2006-01-02"}}</small>
+		    {{else}}
+			<small>{{.Anime.EpisodeRelease.Format "01/02"}}</small>
+		    {{end}}
                 </div>
             </div>
 	{{end}}

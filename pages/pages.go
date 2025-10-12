@@ -39,8 +39,8 @@ func ReturnPkiValidation(w http.ResponseWriter, r *http.Request) {
 
 func Root(w http.ResponseWriter, r *http.Request) {
     session := session.GetCurrentSession(r)
-    if !checkForAccess(session, []string{logic.ROLES.USER}) {
-       renderPageWithAccessViolation(w, r)
+    if !checkForAccess(session, []string{logic.ROLES.USER}) && r.URL.Path != "/common.css" {
+       http.Redirect(w, r, "/login", http.StatusSeeOther)
        return
     }
 
@@ -66,7 +66,7 @@ func Root(w http.ResponseWriter, r *http.Request) {
 func ListTimetables(w http.ResponseWriter, r *http.Request) {
     session := session.GetCurrentSession(r)
     if !checkForAccess(session, []string{logic.ROLES.USER}) {
-       renderPageWithAccessViolation(w, r)
+       http.Redirect(w, r, "/login", http.StatusSeeOther)
        return
     }
 
@@ -89,7 +89,7 @@ func ListTimetables(w http.ResponseWriter, r *http.Request) {
 func SearchNewAnimes(w http.ResponseWriter, r *http.Request) {
     session := session.GetCurrentSession(r)
     if !checkForAccess(session, []string{logic.ROLES.USER}) {
-       renderPageWithAccessViolation(w, r)
+       http.Redirect(w, r, "/login", http.StatusSeeOther)
        return
     }
 
@@ -103,7 +103,7 @@ func SearchNewAnimes(w http.ResponseWriter, r *http.Request) {
 func ListAllTorrents(w http.ResponseWriter, r *http.Request) {
     session := session.GetCurrentSession(r)
     if !checkForAccess(session, []string{logic.ROLES.USER}) {
-       renderPageWithAccessViolation(w, r)
+       http.Redirect(w, r, "/login", http.StatusSeeOther)
        return
     }
 
@@ -151,7 +151,7 @@ func Unexpected(session session.Sessioner, w http.ResponseWriter, r *http.Reques
 func Download(w http.ResponseWriter, r *http.Request) {
     session := session.GetCurrentSession(r)
     if !checkForAccess(session, []string{logic.ROLES.USER}) {
-       renderPageWithAccessViolation(w, r)
+       http.Redirect(w, r, "/login", http.StatusSeeOther)
        return
     }
 
@@ -185,11 +185,12 @@ func AddTorrent(w http.ResponseWriter, r *http.Request) {
     }
 
     link := r.URL.Query().Get("link")
+    route := r.URL.Query().Get("route")
 
     logic.AddTorrent(link)
 
 	filter := getMap(r)
-	cache.Invalidate(filter.Episode.Hash)
+	cache.Invalidate(filter.Episode.Hash+route)
 	cache.Invalidate(filter.Torrents)
 
     http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
@@ -203,13 +204,14 @@ func DeleteTorrent(w http.ResponseWriter, r *http.Request) {
     }
 
     id := r.PathValue("id")
+    route := r.URL.Query().Get("route")
 
     log.Printf("path:  %s\n", r.URL.Path)
 
     logic.DelTorrent(id)
 
 	filter := getMap(r)
-	cache.Invalidate(filter.Episode.Hash)
+	cache.Invalidate(filter.Episode.Hash+route)
 	cache.Invalidate(filter.Torrents)
 
     http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -240,7 +242,7 @@ func AddAnime(w http.ResponseWriter, r *http.Request) {
 func ListAnime(w http.ResponseWriter, r *http.Request) {
     session := session.GetCurrentSession(r)
     if !checkForAccess(session, []string{logic.ROLES.USER}) {
-       renderPageWithAccessViolation(w, r)
+       http.Redirect(w, r, "/login", http.StatusSeeOther)
        return
     }
 
@@ -258,7 +260,7 @@ func ListAnime(w http.ResponseWriter, r *http.Request) {
 
     refreshMap(&filter, r, "category", "subcategory", "resultcount", "nameparams", "forcerefresh")
 
-	logic_cached := cache.Get(filter.Episode.Hash, func() any {
+	logic_cached := cache.Get(filter.Episode.Hash+route, func() any {
 		return logic.ListAnime(route, &filter.Episode)
 	}).(logic.Anime)
 
@@ -289,7 +291,7 @@ func AddEpisode(w http.ResponseWriter, r *http.Request) {
     }
 
 	filter := getMap(r)
-	cache.Invalidate(filter.Episode.Hash)
+	cache.Invalidate(filter.Episode.Hash+route)
 	cache.Invalidate(filter.Torrents)
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
@@ -316,7 +318,7 @@ func DelEpisode(w http.ResponseWriter, r *http.Request) {
     }
 
 	filter := getMap(r)
-	cache.Invalidate(filter.Episode.Hash)
+	cache.Invalidate(filter.Episode.Hash+route)
 	cache.Invalidate(filter.Torrents)
 
     http.Redirect(w, r, "/listanime/"+route, http.StatusSeeOther)
