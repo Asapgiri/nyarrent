@@ -55,21 +55,19 @@ func ListAllAnime(forceUpdate bool) DtoAnime {
 
     slices.SortFunc(lAnime, animeSortByRelease)
 
-    dlist := [][]Anime{}
-    dlist = append(dlist, []Anime{})
-    index := 0
-    day := lAnime[0].Anime.EpisodeRelease.Day()
+    ongoing := []Anime{}
+    finished := []Anime{}
     for _, a := range(lAnime) {
-        if a.Anime.EpisodeRelease.Day() != day {
-            dlist = append(dlist, []Anime{})
-            index++
-            day = a.Anime.EpisodeRelease.Day()
+        if "Ongoing" == a.Anime.Status {
+            ongoing = append(ongoing, a)
+        } else {
+            finished = append(finished, a)
         }
-        dlist[index] = append(dlist[index], a)
     }
 
     ret := DtoAnime{
-        Anime: dlist,
+        Ongoing: ongoing,
+        Finished: finished,
     }
 
     return ret
