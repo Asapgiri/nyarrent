@@ -19,9 +19,27 @@ import (
 // =====================================================================================================================
 // Anime related internal logic...
 
+func animeSortByRelease(a, b Anime) int {
+    if "Ongoing" != a.Anime.Status && "Ongoing" == b.Anime.Status {
+        return 1
+    } else if "Ongoing" == a.Anime.Status && "Ongoing" != b.Anime.Status {
+        return -1
+    } else if time.Now().Compare(a.Anime.EpisodeRelease) <= 0 && time.Now().Compare(b.Anime.EpisodeRelease) > 0 {
+        return 1
+    } else if time.Now().Compare(a.Anime.EpisodeRelease) > 0 && time.Now().Compare(b.Anime.EpisodeRelease) <= 0 {
+        return -1
+    } else {
+        return b.Anime.EpisodeRelease.Compare(a.Anime.EpisodeRelease)
+    }
+}
+
 func ListAllAnime(forceUpdate bool) DtoAnime {
     anime := dbase.Anime{}
     list, _ := anime.List()
+
+    if len(list) <= 0 {
+        return DtoAnime{}
+    }
 
     lAnime := make([]Anime, len(list))
 
@@ -35,22 +53,23 @@ func ListAllAnime(forceUpdate bool) DtoAnime {
         lAnime[i].Anime = a
     }
 
-    slices.SortFunc(lAnime, func(a, b Anime) int {
-        if "Ongoing" != a.Anime.Status && "Ongoing" == b.Anime.Status {
-            return 1
-        } else if "Ongoing" == a.Anime.Status && "Ongoing" != b.Anime.Status {
-            return -1
-        } else if time.Now().Compare(a.Anime.EpisodeRelease) <= 0 && time.Now().Compare(b.Anime.EpisodeRelease) > 0 {
-            return 1
-        } else if time.Now().Compare(a.Anime.EpisodeRelease) > 0 && time.Now().Compare(b.Anime.EpisodeRelease) <= 0 {
-            return -1
-        } else {
-            return b.Anime.EpisodeRelease.Compare(a.Anime.EpisodeRelease)
+    slices.SortFunc(lAnime, animeSortByRelease)
+
+    dlist := [][]Anime{}
+    dlist = append(dlist, []Anime{})
+    index := 0
+    day := lAnime[0].Anime.EpisodeRelease.Day()
+    for _, a := range(lAnime) {
+        if a.Anime.EpisodeRelease.Day() != day {
+            dlist = append(dlist, []Anime{})
+            index++
+            day = a.Anime.EpisodeRelease.Day()
         }
-    })
+        dlist[index] = append(dlist[index], a)
+    }
 
     ret := DtoAnime{
-        Anime: lAnime,
+        Anime: dlist,
     }
 
     return ret

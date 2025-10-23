@@ -96,5 +96,5 @@ type Anime struct {
 
 type DtoAnime struct {
     SearchText  string
-    Anime       []Anime
+    Anime       [][]Anime
 }
