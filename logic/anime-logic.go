@@ -33,6 +33,13 @@ func animeSortByRelease(a, b Anime) int {
     }
 }
 
+func is_today(t time.Time) bool {
+    year_now, month_now, day_now := time.Now().Date()
+    year, month, day := t.Date()
+
+    return year_now == year && month_now == month && day_now == day
+}
+
 func ListAllAnime(forceUpdate bool) DtoAnime {
     anime := dbase.Anime{}
     list, _ := anime.List()
@@ -55,10 +62,13 @@ func ListAllAnime(forceUpdate bool) DtoAnime {
 
     slices.SortFunc(lAnime, animeSortByRelease)
 
+    today := []Anime{}
     ongoing := []Anime{}
     finished := []Anime{}
     for _, a := range(lAnime) {
-        if "Ongoing" == a.Anime.Status {
+        if is_today(a.Anime.EpisodeRelease) {
+            today = append(today, a)
+        } else if "Ongoing" == a.Anime.Status {
             ongoing = append(ongoing, a)
         } else {
             finished = append(finished, a)
@@ -66,6 +76,7 @@ func ListAllAnime(forceUpdate bool) DtoAnime {
     }
 
     ret := DtoAnime{
+        Today: today,
         Ongoing: ongoing,
         Finished: finished,
     }
