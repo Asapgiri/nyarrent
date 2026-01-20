@@ -14,6 +14,7 @@ type Sessioner struct {
     Path        string
     Dto         any
     UserLocal   time.Location
+    Meta        map[string]string
 }
 //FIXME: Handle fully separately in every function/session!!
 //var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
@@ -58,5 +59,6 @@ func GetCurrentSession(r *http.Request) Sessioner {
     session.Authenticate(r)
     // FIXME: Get from user or set somewhere.
     session.UserLocal = *time.Local
+    session.Meta["title"] = "Nyarrent"
     return session
 }

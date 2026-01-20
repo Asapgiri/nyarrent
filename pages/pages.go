@@ -264,6 +264,8 @@ func ListAnime(w http.ResponseWriter, r *http.Request) {
 		return logic.ListAnime(route, &filter.Episode)
 	}).(logic.Anime)
 
+    session.Meta["title"] = logic_cached.Anime.Title
+
     fil, _ := read_artifact("listanime.html", w.Header())
     Render(session, w, fil, logic_cached)
     refreshMap(&filter, r)
