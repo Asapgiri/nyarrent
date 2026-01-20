@@ -59,6 +59,7 @@ func GetCurrentSession(r *http.Request) Sessioner {
     session.Authenticate(r)
     // FIXME: Get from user or set somewhere.
     session.UserLocal = *time.Local
+    session.Meta = make(map[string]string)
     session.Meta["title"] = "Nyarrent"
     return session
 }
