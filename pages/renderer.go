@@ -102,8 +102,10 @@ func Render(session session.Sessioner, w http.ResponseWriter, temp string, dto a
         temp = tpl.String()
     }
 
+    session.Main = temp
+
     var tpl bytes.Buffer
-    tmp.Execute(&tpl, temp)
+    tmp.Execute(&tpl, session)
     main, err := template.New("Main").Funcs(funcMap).Parse(tpl.String())
     if nil != err {
         io.WriteString(w, "Templating error 2!" + err.Error())
