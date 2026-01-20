@@ -2,6 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <title>{{index .Meta "title"}}</title>
         {{range $k, $v := .Meta}}
         <meta name="{{$k}}" content="{{$v}}">
         {{end}}
