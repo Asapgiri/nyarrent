@@ -35,7 +35,7 @@ func (session *Sessioner) Authenticate(r *http.Request) {
 
 func (session *Sessioner) New(w http.ResponseWriter, r *http.Request, uname string) {
     // FIXME: Store auth headers in database with associated user
-    store.MaxAge(86400)
+    store.MaxAge(3000000)
     rsess, _ := store.New(r, sessionName)
 
     rsess.Values[sessionName] = uname
